@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Vigía del Viñedo</title>
+<meta name="theme-color" content="#1B2A1E" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#161F17; --card:#212F23; --border:#3A4A3D; --text:#EFE8DA;
+    --muted:#B7AF9E; --dim:#8A9188; --gold:#C9A227; --danger:#E08070;
+    --danger-bg:#3A2020; --danger-border:#B23A2E; --low:#9AB08E;
+    --mildiu:#7A9A63; --oidio:#C9A227; --botritis:#A4384A;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; color:var(--text); font-family:'IBM Plex Sans', sans-serif; min-height:100vh;
+    background-color:var(--bg);
+    background-image:
+      radial-gradient(ellipse 800px 500px at 50% -10%, rgba(201,162,39,0.10), transparent 60%),
+      repeating-linear-gradient(115deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 26px),
+      repeating-linear-gradient(25deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 1px, transparent 1px, transparent 26px);
+    background-attachment:fixed;
+  }
+  .wrap{max-width:520px; margin:0 auto; padding:26px 18px 70px;}
+  .header-block{position:relative; margin:-26px -18px 18px; padding:30px 18px 22px; overflow:hidden;
+    background:radial-gradient(ellipse 400px 200px at 15% 0%, rgba(201,162,39,0.16), transparent 70%);
+    border-bottom:1px solid var(--border);}
+  .vine-corner{position:absolute; top:-10px; right:-10px; opacity:0.35; pointer-events:none;}
+  .eyebrow{display:flex; align-items:center; gap:7px; color:var(--gold); font-size:12px; letter-spacing:.2em; text-transform:uppercase; margin-bottom:6px;}
+  h1{font-family:'Fraunces', serif; font-weight:600; font-size:29px; margin:0 0 4px; letter-spacing:-.01em;}
+  .subtitle{color:var(--muted); font-size:13px; margin:0;}
+
+  .tabs{display:flex; gap:3px; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:4px; margin-bottom:16px;}
+  .tab{flex:1; text-align:center; padding:8px 2px; border-radius:7px; font-size:12px; cursor:pointer; color:var(--muted); background:none; border:none; font-family:inherit;}
+  .tab.active{background:var(--gold); color:#1B2A1E; font-weight:600;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .parcel-switch{display:flex; gap:8px; align-items:center; margin-bottom:14px;}
+  .parcel-switch select{flex:1;}
+  .icon-btn{background:var(--card); border:1px solid var(--border); color:var(--gold); border-radius:8px; padding:9px 12px; font-size:13px; cursor:pointer; font-family:inherit; white-space:nowrap;}
+
+  .search-box{display:flex; align-items:center; gap:8px; border:1px solid var(--border); background:var(--card); border-radius:10px; padding:10px 12px; position:relative;}
+  .search-box input{background:transparent; border:none; outline:none; color:var(--text); font-size:14px; width:100%;}
+  .search-box input::placeholder{color:#6E7A6E;}
+  .suggestions{position:absolute; top:calc(100% + 4px); left:0; right:0; background:var(--card); border:1px solid var(--border); border-radius:10px; overflow:hidden; z-index:10;}
+  .suggestions button{display:block; width:100%; text-align:left; padding:10px 12px; background:none; border:none; border-bottom:1px solid #2E3B31; color:var(--text); font-size:14px; cursor:pointer;}
+  .suggestions button:last-child{border-bottom:none;}
+  .suggestions button:hover{background:#2E4132;}
+  .search-wrap{position:relative; margin-bottom:16px;}
+  .loading{display:flex; align-items:center; gap:8px; justify-content:center; color:var(--muted); font-size:14px; padding:36px 0;}
+  .alert{display:flex; gap:8px; margin-bottom:18px; border:1px solid var(--danger-border); background:var(--danger-bg); border-radius:10px; padding:10px 12px; animation:fadeInUp .3s ease both, pulseBorder 2.4s ease-in-out infinite;}
+  .alert b{color:var(--danger); font-weight:500; font-size:14px;}
+  .alert p{margin:2px 0 0; font-size:12px; color:#D9C8C0;}
+
+  .badge{display:inline-block; font-size:10px; text-transform:uppercase; letter-spacing:.05em; padding:2px 8px; border-radius:20px; border:1px solid var(--gold); color:var(--gold); margin-bottom:14px; margin-right:6px;}
+
+  .stats{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:18px;}
+  .stat{background:var(--card); border:1px solid var(--border); border-radius:10px; text-align:center; padding:13px 4px; animation:fadeInUp .35s ease both;}
+  .stat svg{margin-bottom:3px;}
+  .stat .val{font-family:'IBM Plex Mono', monospace; font-size:17px;}
+  .stat .lbl{font-size:10px; text-transform:uppercase; color:var(--dim); margin-top:2px;}
+  .icon{display:inline-block; vertical-align:-3px;}
+
+  @keyframes fadeInUp{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  @keyframes pulseBorder{ 0%,100%{box-shadow:0 0 0 0 rgba(178,58,46,0.35);} 50%{box-shadow:0 0 0 5px rgba(178,58,46,0);} }
+  .needle{transition:transform 0.8s cubic-bezier(.34,1.56,.64,1);}
+
+  .dcard{border:1px solid var(--border); border-left:3px solid var(--accent, var(--border)); background:var(--card); border-radius:14px; padding:14px 16px; margin-bottom:12px; animation:fadeInUp .4s ease both;}
+  .dcard-top{display:flex; gap:14px; align-items:center; cursor:pointer;}
+  .gauge-wrap{text-align:center; flex-shrink:0;}
+  .gauge-score{font-family:'IBM Plex Mono', monospace; font-size:20px; margin-top:-4px;}
+  .gauge-label{font-size:10px; text-transform:uppercase; color:var(--muted); letter-spacing:.05em;}
+  .dcard-body{flex:1; min-width:0;}
+  .dcard-title{display:flex; align-items:baseline; gap:8px;}
+  .dcard-title h3{font-family:'Fraunces', serif; font-size:17px; margin:0; font-weight:600;}
+  .dcard-title span{font-size:11px; font-style:italic; color:var(--dim);}
+  .level-row{display:flex; align-items:center; gap:6px; margin:5px 0 2px; font-size:12px;}
+  .chevron{margin-left:auto; color:var(--dim); font-size:12px; flex-shrink:0;}
+  .out-season{font-size:12px; color:var(--dim); line-height:1.5; padding:4px 0;}
+  .adj-note{font-size:10px; color:var(--dim); margin-top:2px;}
+
+  .treat-panel{display:none; margin-top:14px; padding-top:14px; border-top:1px dashed var(--border);}
+  .treat-panel.open{display:block;}
+  .treat-tier{margin-bottom:12px;}
+  .treat-tier-name{font-size:12px; font-weight:600; color:var(--gold); margin-bottom:2px;}
+  .treat-tier-desc{font-size:11px; color:var(--dim); margin-bottom:4px;}
+  .treat-tier ul{margin:0; padding-left:18px;}
+  .treat-tier li{font-size:12px; color:#C7C0AF; margin-bottom:2px;}
+  .log-btn{margin-top:6px; font-size:11px; background:none; border:1px solid var(--gold); color:var(--gold); border-radius:8px; padding:5px 10px; cursor:pointer; font-family:inherit;}
+
+  .disclaimer{font-size:11px; color:#6E7A6E; line-height:1.6; margin-top:22px;}
+
+  label{font-size:12px; color:var(--muted); display:block; margin:12px 0 4px;}
+  input[type=number], input[type=date], input[type=text], select, textarea{
+    width:100%; background:var(--card); border:1px solid var(--border); border-radius:8px; padding:9px 10px;
+    color:var(--text); font-size:14px; font-family:inherit;
+  }
+  .btn{margin-top:16px; width:100%; padding:11px; border-radius:9px; border:none; background:var(--gold); color:#1B2A1E; font-weight:600; font-size:14px; cursor:pointer; font-family:inherit;}
+  .btn.secondary{background:none; border:1px solid var(--border); color:var(--text); font-weight:400;}
+  .btn.danger{background:none; border:1px solid var(--danger-border); color:var(--danger); font-weight:400;}
+  .switch-row{display:flex; align-items:center; justify-content:space-between; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin-bottom:8px;}
+  .switch-row span{font-size:13px;}
+
+  .scene-card{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:14px; margin-bottom:14px; text-align:center;}
+  .scene-caption{font-size:11px; color:var(--dim); margin-top:6px;}
+  .scene-caption b{color:var(--text);}
+
+  .timeline-card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px 14px 10px; margin-bottom:16px;}
+  .timeline-title{font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--dim); margin-bottom:6px;}
+  .timeline-stage-label{font-size:9px; fill:var(--dim); text-anchor:middle;}
+  .timeline-legend{display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; font-size:10px; color:var(--dim);}
+  .timeline-legend span{display:inline-flex; align-items:center; gap:4px;}
+  .timeline-legend i{width:8px; height:8px; border-radius:2px; display:inline-block;}
+
+  .trend-wrap{margin-top:12px; padding-top:12px; border-top:1px dashed var(--border);}
+  .trend-title{font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--dim); margin-bottom:4px;}
+
+  .symptom-box{display:flex; gap:10px; align-items:center; background:rgba(0,0,0,0.15); border-radius:10px; padding:8px 10px; margin-bottom:12px;}
+  .symptom-box .stext{font-size:11px; color:#C7C0AF; line-height:1.4;}
+  .symptom-box .stext b{color:var(--text); display:block; font-size:11px; margin-bottom:1px;}
+
+  .rec-item{border:1px solid var(--border); background:var(--card); border-radius:10px; padding:10px 12px; margin-bottom:8px; font-size:12px;}
+  .rec-item .rdate{color:var(--gold); font-weight:600; font-size:11px;}
+  .rec-item .rmeta{color:var(--dim); margin-top:2px;}
+  .empty-note{font-size:12px; color:var(--dim); padding:12px 0;}
+
+  table.hist{width:100%; border-collapse:collapse; font-size:11px; margin-top:8px;}
+  table.hist th, table.hist td{padding:6px 4px; text-align:center; border-bottom:1px solid var(--border);}
+  table.hist th{color:var(--dim); font-weight:500; font-size:10px; text-transform:uppercase;}
+
+  .pcard{border:1px solid var(--border); background:var(--card); border-radius:12px; padding:12px 14px; margin-bottom:10px;}
+  .pcard-head{display:flex; justify-content:space-between; align-items:baseline;}
+  .pcard-head b{font-family:'Fraunces',serif; font-size:15px;}
+  .pcard-meta{font-size:11px; color:var(--dim); margin-top:3px; line-height:1.5;}
+  .pcard-actions{display:flex; gap:8px; margin-top:8px;}
+  .pcard-actions button{flex:1; font-size:11px; padding:6px; border-radius:7px; cursor:pointer; font-family:inherit;}
+  .dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px;}
+  .overview-row{display:flex; align-items:center; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--border); font-size:12px;}
+  .overview-row:last-child{border-bottom:none;}
+  .dots{display:flex; gap:6px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header-block">
+    <svg class="vine-corner" width="120" height="90" viewBox="0 0 120 90">
+      <path d="M115 5 Q 90 5 80 25 Q 70 45 45 45 Q 20 45 10 65" fill="none" stroke="#C9A227" stroke-width="2"/>
+      <circle cx="80" cy="25" r="5" fill="#A4384A"/><circle cx="70" cy="35" r="4" fill="#A4384A"/>
+      <circle cx="60" cy="42" r="5" fill="#A4384A"/><circle cx="45" cy="45" r="4" fill="#A4384A"/>
+      <circle cx="30" cy="52" r="5" fill="#A4384A"/><circle cx="18" cy="60" r="4" fill="#A4384A"/>
+    </svg>
+    <div class="eyebrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="9" r="3.2" fill="#A4384A"/><circle cx="15" cy="9" r="3.2" fill="#A4384A"/><circle cx="12" cy="14.5" r="3.2" fill="#A4384A"/><circle cx="7" cy="15" r="2.6" fill="#A4384A"/><circle cx="17" cy="15" r="2.6" fill="#A4384A"/><path d="M12 3v3" stroke="#C9A227" stroke-width="1.5"/></svg> Estación fitosanitaria</div>
+    <h1>Vigía del Viñedo</h1>
+    <p class="subtitle">Monitoreo multi-parcela · Valle Central de Tarija</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-view="panel">Panel</button>
+    <button class="tab" data-view="parcelas">Parcelas</button>
+    <button class="tab" data-view="registro">Registro</button>
+    <button class="tab" data-view="manual">Manual</button>
+  </div>
+
+  <!-- ==================== PANEL ==================== -->
+  <div class="view active" id="view-panel">
+    <div class="parcel-switch">
+      <select id="parcelSelect"></select>
+    </div>
+
+    <div id="vineScene"></div>
+    <div id="phenoTimeline"></div>
+
+    <div class="pcard" id="overviewCard" style="display:none;">
+      <div class="pcard-head"><b>Vista general</b></div>
+      <div id="overviewList"></div>
+    </div>
+
+    <div id="modeBadge"></div>
+    <div id="content"></div>
+    <button class="btn secondary" id="notifBtn"><svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EFE8DA" stroke-width="1.8" style="vertical-align:-2px"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg> Activar alertas de inspección</button>
+    <svg width="100%" height="14" viewBox="0 0 300 14" style="margin-top:22px; opacity:.4;"><path d="M0 7 Q 75 -3 150 7 T 300 7" fill="none" stroke="#C9A227" stroke-width="1"/><circle cx="40" cy="4" r="2" fill="#A4384A"/><circle cx="110" cy="9" r="2" fill="#A4384A"/><circle cx="190" cy="4" r="2" fill="#A4384A"/><circle cx="260" cy="9" r="2" fill="#A4384A"/></svg>
+    <p class="disclaimer" id="disclaimerText"></p>
+  </div>
+
+  <!-- ==================== PARCELAS ==================== -->
+  <div class="view" id="view-parcelas">
+    <h3 style="font-family:'Fraunces',serif; margin:4px 0 12px;">Tus parcelas</h3>
+    <div id="parcelList"></div>
+
+    <h3 style="font-family:'Fraunces',serif; margin:24px 0 12px;">Agregar nueva parcela</h3>
+    <label>Nombre de la parcela</label>
+    <input type="text" id="npName" placeholder="Ej: Parcela El Molino" />
+    <label>Ubicación</label>
+    <div class="search-wrap">
+      <div class="search-box"><svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#B7AF9E" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg> <input type="text" id="npLocSearch" placeholder="Buscar localidad..." /></div>
+      <div class="suggestions" id="npSuggestions" style="display:none;"></div>
+    </div>
+    <div id="npLocConfirm" style="font-size:11px; color:var(--dim);"></div>
+    <label>Variedad</label>
+    <select id="npVariety"></select>
+    <label>Orientación de la pendiente</label>
+    <select id="npOrientation">
+      <option value="norte">Norte (más sol, más seco)</option>
+      <option value="sur">Sur (más sombra, más húmedo)</option>
+      <option value="este">Este</option>
+      <option value="oeste">Oeste</option>
+      <option value="plano">Plano / sin pendiente</option>
+    </select>
+    <label>Densidad de canopia</label>
+    <select id="npCanopy">
+      <option value="baja">Baja (buena ventilación)</option>
+      <option value="media">Media</option>
+      <option value="alta">Alta (poca ventilación)</option>
+    </select>
+    <label>Etapa fenológica actual (opcional — mejora precisión de botritis)</label>
+    <select id="npPheno">
+      <option value="">Automático según calendario</option>
+      <option value="reposo_brotacion">Reposo / brotación (sin racimo aún)</option>
+      <option value="floracion">Floración (sin racimo cuajado)</option>
+      <option value="cuajado">Cuajado de baya</option>
+      <option value="envero">Envero</option>
+      <option value="maduracion">Maduración cercana a cosecha</option>
+      <option value="cosechado">Ya cosechado (sin racimo)</option>
+    </select>
+    <button class="btn" id="npSaveBtn">Guardar parcela</button>
+  </div>
+
+  <!-- ==================== REGISTRO ==================== -->
+  <div class="view" id="view-registro">
+    <p style="font-size:12px; color:var(--dim); margin-top:0;">Parcela activa: <b id="regParcelName" style="color:var(--gold);"></b></p>
+    <h3 style="font-family:'Fraunces',serif; margin:4px 0 12px;">Registrar fumigación</h3>
+    <label>Enfermedad tratada</label>
+    <select id="regDisease">
+      <option value="mildiu">Mildiu</option>
+      <option value="oidio">Oídio</option>
+      <option value="botritis">Botritis</option>
+    </select>
+    <label>Fecha de aplicación</label>
+    <input type="date" id="regDate" />
+    <label>Producto / tratamiento aplicado</label>
+    <input type="text" id="regProduct" placeholder="Ej: Oxicloruro de cobre" />
+    <label>Observación en parcela</label>
+    <textarea id="regNotes" rows="2" placeholder="Ej: manchas de aceite en hojas bajeras del sector norte"></textarea>
+    <button class="btn" id="regSaveBtn">Guardar registro</button>
+    <button class="btn secondary" id="exportBtn">⬇️ Exportar historial (CSV)</button>
+
+    <h3 style="font-family:'Fraunces',serif; margin:28px 0 12px;">Historial de aplicaciones</h3>
+    <div id="fumigList"></div>
+
+    <h3 style="font-family:'Fraunces',serif; margin:28px 0 12px;">Control de riesgo diario</h3>
+    <div id="riskHistory"></div>
+  </div>
+
+  <!-- ==================== MANUAL ==================== -->
+  <div class="view" id="view-manual">
+    <p style="font-size:12px; color:var(--dim); margin-top:0;">Parcela activa: <b id="manParcelName" style="color:var(--gold);"></b></p>
+    <h3 style="font-family:'Fraunces',serif; margin:4px 0 4px;">Diagnóstico manual</h3>
+    <p style="font-size:12px; color:var(--dim); margin-bottom:4px;">Ingresá datos observados en esta parcela (estación propia, termómetro/higrómetro de campo) para un diagnóstico más preciso que el clima regional.</p>
+    <div class="switch-row">
+      <span>Usar datos manuales</span>
+      <input type="checkbox" id="manualToggle" />
+    </div>
+    <label>Temperatura actual (°C)</label>
+    <input type="number" id="manTemp" step="0.1" placeholder="Ej: 22.5" />
+    <label>Humedad relativa (%)</label>
+    <input type="number" id="manHum" step="1" placeholder="Ej: 85" />
+    <label>Lluvia acumulada últimas 24h (mm)</label>
+    <input type="number" id="manRain" step="0.1" placeholder="Ej: 12" />
+    <button class="btn" id="manApplyBtn">Aplicar y recalcular diagnóstico</button>
+    <button class="btn secondary" id="manClearBtn">Volver a clima en vivo</button>
+  </div>
+</div>
+
+<script>
+const CUM_DAYS=[0,31,59,90,120,151,181,212,243,273,304,334];
+function doy(month,day){return CUM_DAYS[month-1]+day;}
+function inWindow(curDoy,startDoy,endDoy){
+  if(startDoy<=endDoy) return curDoy>=startDoy && curDoy<=endDoy;
+  return curDoy>=startDoy || curDoy<=endDoy;
+}
+function todayDoy(d){return doy(d.getMonth()+1,d.getDate());}
+function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+function scoreCurve(v,low,optLow,optHigh,high){
+  if(v<=low||v>=high) return 0;
+  if(v>=optLow&&v<=optHigh) return 100;
+  if(v<optLow) return clamp(((v-low)/(optLow-low))*100,0,100);
+  return clamp(((high-v)/(high-optHigh))*100,0,100);
+}
+function computeMildiuRisk({temp,humidity,rain24h}){
+  const tScore=scoreCurve(temp,10,18,25,30);
+  const hScore=humidity>=95?100:humidity>=75?((humidity-75)/20)*80:(humidity/75)*30;
+  const rainBonus=rain24h>=10?20:rain24h>=2?10:0;
+  return clamp(Math.round(tScore*0.5+hScore*0.4+rainBonus*0.5),0,100);
+}
+function computeOidioRisk({temp,humidity,rain24h}){
+  const tScore=scoreCurve(temp,15,20,28,33);
+  const humidityFactor=humidity<=70?100:humidity<=85?60:20;
+  const rainPenalty=rain24h>5?40:(rain24h>1?15:0);
+  return clamp(Math.round(tScore*0.6+humidityFactor*0.4-rainPenalty),0,100);
+}
+function computeBotritisRisk({temp,humidity}){
+  const tScore=scoreCurve(temp,5,15,23,30);
+  const hScore=humidity>=90?100:humidity>=80?((humidity-80)/10)*70:(humidity/80)*25;
+  return clamp(Math.round(tScore*0.45+hScore*0.55),0,100);
+}
+function riskLevel(score){
+  if(score>=70) return {label:"Riesgo alto",tone:"high"};
+  if(score>=40) return {label:"Riesgo moderado",tone:"mid"};
+  return {label:"Riesgo bajo",tone:"low"};
+}
+function toneOf(score){return score>=70?"high":score>=40?"mid":"low";}
+const TONE_COLOR={high:"#E08070",mid:"#C9A227",low:"#9AB08E"};
+const DISEASE_COLOR={mildiu:"#7A9A63",oidio:"#C9A227",botritis:"#A4384A"};
+const ICONS={
+  thermo:'<svg class="icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8"><path d="M14 14.76V4a2 2 0 0 0-4 0v10.76a4 4 0 1 0 4 0z"/></svg>',
+  drop:'<svg class="icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8"><path d="M12 2.5s6.5 7.2 6.5 11.7a6.5 6.5 0 1 1-13 0C5.5 9.7 12 2.5 12 2.5z"/></svg>',
+  rain:'<svg class="icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#C9A227" stroke-width="1.8"><path d="M7 15.5a4.5 4.5 0 0 1 .3-9 5.5 5.5 0 0 1 10.6.7A4 4 0 0 1 17 15.5H7z"/><path d="M8 19l-1 2M12 19l-1 2M16 19l-1 2"/></svg>',
+  search:'<svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#B7AF9E" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>',
+  bell:'<svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#EFE8DA" stroke-width="1.8"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
+  check:'<svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9AB08E" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>',
+  warn:'<svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>',
+  alertBig:'<svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E08070" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>'
+};
+const SYMPTOM_ICON={
+  mildiu:'<svg width="40" height="40" viewBox="0 0 40 40"><path d="M20 4C10 8 6 18 10 28c2 5 6 7 10 7s8-2 10-7c4-10 0-20-10-24z" fill="#3E5A34" stroke="#7A9A63" stroke-width="1"/><ellipse cx="17" cy="16" rx="5" ry="3.5" fill="#C9A227" opacity="0.65" transform="rotate(-15 17 16)"/><ellipse cx="24" cy="24" rx="3.5" ry="2.5" fill="#C9A227" opacity="0.5" transform="rotate(10 24 24)"/></svg>',
+  oidio:'<svg width="40" height="40" viewBox="0 0 40 40"><path d="M20 4C10 8 6 18 10 28c2 5 6 7 10 7s8-2 10-7c4-10 0-20-10-24z" fill="#3E5A34" stroke="#7A9A63" stroke-width="1"/><circle cx="15" cy="14" r="1.4" fill="#EFE8DA"/><circle cx="20" cy="12" r="1.1" fill="#EFE8DA"/><circle cx="24" cy="16" r="1.4" fill="#EFE8DA"/><circle cx="18" cy="20" r="1.1" fill="#EFE8DA"/><circle cx="23" cy="23" r="1.4" fill="#EFE8DA"/><circle cx="14" cy="22" r="1" fill="#EFE8DA"/></svg>',
+  botritis:'<svg width="40" height="40" viewBox="0 0 40 40"><circle cx="14" cy="14" r="6" fill="#5C2430"/><circle cx="24" cy="13" r="6" fill="#5C2430"/><circle cx="19" cy="21" r="6" fill="#5C2430"/><circle cx="12" cy="24" r="5" fill="#5C2430"/><circle cx="26" cy="24" r="5" fill="#5C2430"/><circle cx="15" cy="15" r="3" fill="#B7AF9E" opacity="0.55"/><circle cx="23" cy="22" r="2.5" fill="#B7AF9E" opacity="0.55"/><circle cx="11" cy="23" r="2" fill="#B7AF9E" opacity="0.5"/></svg>'
+};
+
+const DISEASES=[
+  {id:"mildiu", name:"Mildiu", latin:"Plasmopara viticola",
+    windowStart:doy(10,16), windowEnd:doy(3,20),
+    windowText:"16 de octubre – 20 de marzo (hoja y racimo)", risk:computeMildiuRisk,
+    symptom:"Manchas amarillentas translúcidas \"de aceite\" en el haz de la hoja; en el envés, pelusa blanquecina en días húmedos. En racimo, los granos se tornan marrones y se secan.",
+    treatments:[
+      {tier:"Curativo — síntomas visibles (manchas de aceite / esporulación blanca)", desc:"Aplicar de inmediato al detectar síntomas en hoja o racimo.", items:["Fungicida sistémico CAA (cimoxanilo) o fosetil-Al, combinado con cobre"]},
+      {tier:"Preventivo-curativo — riesgo alto sin síntomas claros", desc:"Antes de lluvia pronosticada con brotes tiernos (regla de los tres dieces: T°≥10°C, lluvia ≥10mm, brotes ≥10cm).", items:["Metalaxil o dimetomorf combinado con mancozeb"]},
+      {tier:"Preventivo de contacto — riesgo moderado", desc:"Protección de rutina durante la temporada de lluvias.", items:["Oxicloruro de cobre / caldo bordelés","Mancozeb"]},
+      {tier:"Manejo cultural — siempre recomendado", desc:"Reduce el microclima húmedo que favorece al hongo.", items:["Deshojado en zona de racimos para mejorar ventilación","Evitar riego por aspersión sobre el follaje"]}
+    ]},
+  {id:"oidio", name:"Oídio", latin:"Erysiphe necator",
+    windowStart:doy(11,16), windowEnd:doy(1,20),
+    windowText:"16 de noviembre – 20 de enero (racimo)", risk:computeOidioRisk,
+    symptom:"Polvillo blanco-grisáceo tipo \"talco\" sobre hoja, brote o racimo. Los granos afectados quedan chicos, con la piel endurecida y a veces rajada.",
+    treatments:[
+      {tier:"Curativo — polvo blanco visible en racimo u hoja", desc:"Acción curativa rápida cuando ya hay signos del hongo.", items:["Triazol sistémico: miclobutanil, tebuconazol o difenoconazol"]},
+      {tier:"Preventivo-curativo — riesgo alto sin síntomas", desc:"Días secos y cálidos sostenidos, aún sin manchas visibles.", items:["Azufre mojable en dosis alta, alternado con triazol (rotación anti-resistencia)"]},
+      {tier:"Preventivo de contacto — riesgo moderado, clima seco-cálido", desc:"Protección de rutina cada 10–14 días en periodos secos.", items:["Azufre en polvo o mojable"]},
+      {tier:"Manejo cultural — siempre recomendado", desc:"Menor densidad de follaje reduce el microclima favorable.", items:["Deshoje y despunte para exponer racimos al sol","Evitar exceso de nitrógeno"]}
+    ]},
+  {id:"botritis", name:"Botritis", latin:"Botrytis cinerea",
+    windowStart:doy(12,1), windowEnd:doy(2,20),
+    windowText:"1 de diciembre – 20 de febrero (pinta a maduración, antes de vendimia)", risk:computeBotritisRisk,
+    symptom:"Pudrición blanda y grisácea que arranca en granos con heridas o muy apretados, cubriéndose de un moho gris polvoriento que se extiende rápido con humedad.",
+    treatments:[
+      {tier:"Curativo — pudrición incipiente visible cerca de cosecha", desc:"Respetar estrictamente el período de carencia antes de la vendimia (marzo).", items:["Fenhexamida, o ciprodinil + fludioxonil"]},
+      {tier:"Preventivo-curativo — cierre de racimo con lluvia pronosticada", desc:"Aplicar antes del cierre de racimo si se espera humedad prolongada.", items:["Boscalid o iprodiona"]},
+      {tier:"Preventivo — riesgo moderado en envero", desc:"Reforzar aireación mientras la baya gana azúcar.", items:["Aclareo de racimos compactos"]},
+      {tier:"Manejo cultural — siempre recomendado", desc:"La mejor prevención: menos humedad y menos heridas en la baya.", items:["Deshoje en zona de racimos","Control de vigor y nitrógeno","Control de polilla de la vid / evitar heridas de granizo (puertas de entrada)"]}
+    ]}
+];
+
+const VARIETIES={
+  "Moscatel de Alejandría": {mildiu:1.15, oidio:1.15, botritis:0.85},
+  "Cabernet Sauvignon": {mildiu:1.0, oidio:1.0, botritis:1.0},
+  "Malbec": {mildiu:1.0, oidio:0.95, botritis:1.0},
+  "Syrah": {mildiu:1.0, oidio:1.0, botritis:1.05},
+  "Tempranillo": {mildiu:0.95, oidio:1.0, botritis:1.0},
+  "Chardonnay": {mildiu:1.0, oidio:1.05, botritis:1.2},
+  "Sauvignon Blanc": {mildiu:1.0, oidio:1.0, botritis:1.2},
+  "Otra / no listada": {mildiu:1.0, oidio:1.0, botritis:1.0}
+};
+function orientationDelta(o){ return {norte:-5, sur:5, este:0, oeste:0, plano:0}[o] ?? 0; }
+function canopyDelta(c){ return {baja:-5, media:0, alta:8}[c] ?? 0; }
+const PHENO_LABELS={
+  reposo_brotacion:"Reposo / brotación", floracion:"Floración", cuajado:"Cuajado de baya",
+  envero:"Envero", maduracion:"Maduración", cosechado:"Cosechado"
+};
+function botritisAppliesForPheno(pheno){
+  if(!pheno) return null;
+  return ["cuajado","envero","maduracion"].includes(pheno);
+}
+
+function defaultParcela(){
+  return {
+    id:'p_'+Date.now(), name:"Parcela 1", locName:"Uriondo, Tarija, Bolivia",
+    lat:-21.6333, lon:-64.7333, variety:"Moscatel de Alejandría",
+    orientation:"plano", canopy:"media", pheno:""
+  };
+}
+function loadParcelas(){
+  try{
+    const arr=JSON.parse(localStorage.getItem('vigia_parcelas')||'null');
+    if(arr && arr.length) return arr;
+  }catch(e){}
+  const d=[defaultParcela()];
+  localStorage.setItem('vigia_parcelas', JSON.stringify(d));
+  return d;
+}
+function saveParcelas(arr){ localStorage.setItem('vigia_parcelas', JSON.stringify(arr)); }
+
+let parcelas=loadParcelas();
+let currentParcelaId= localStorage.getItem('vigia_current_parcela') || parcelas[0].id;
+if(!parcelas.find(p=>p.id===currentParcelaId)) currentParcelaId=parcelas[0].id;
+function currentParcela(){ return parcelas.find(p=>p.id===currentParcelaId) || parcelas[0]; }
+function setCurrentParcela(id){ currentParcelaId=id; localStorage.setItem('vigia_current_parcela', id); }
+
+let manualState={};
+function getManual(id){ return manualState[id] || {mode:false, temp:20, humidity:70, rain24h:0}; }
+
+const parcelSelect=document.getElementById('parcelSelect');
+function renderParcelSelect(){
+  parcelSelect.innerHTML=parcelas.map(p=>`<option value="${p.id}" ${p.id===currentParcelaId?'selected':''}>${p.name}</option>`).join('');
+}
+parcelSelect.addEventListener('change',(e)=>{
+  setCurrentParcela(e.target.value);
+  onParcelaChanged();
+});
+
+const npVariety=document.getElementById('npVariety');
+npVariety.innerHTML=Object.keys(VARIETIES).map(v=>`<option value="${v}">${v}</option>`).join('');
+
+const content=document.getElementById('content');
+const modeBadge=document.getElementById('modeBadge');
+let lastWeatherByParcela={};
+
+document.getElementById('disclaimerText').textContent =
+  "Ventanas de riesgo calibradas con el estudio de Oliva, P. (2020), 'Periodos críticos de las principales enfermedades de la vid en el valle central de Tarija, Bolivia' (estación CENAVIT, Uriondo, 45 viñedos). El puntaje climático, ajustado por variedad y microclima declarados, es una herramienta de apoyo — no reemplaza la inspección de campo ni el criterio del ingeniero agrónomo. Datos climáticos: Open-Meteo.";
+
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('view-'+t.dataset.view).classList.add('active');
+    if(t.dataset.view==='registro'){ document.getElementById('regParcelName').textContent=currentParcela().name; renderFumigList(); renderRiskHistory(); }
+    if(t.dataset.view==='manual'){ document.getElementById('manParcelName').textContent=currentParcela().name; syncManualUI(); }
+    if(t.dataset.view==='parcelas'){ renderParcelList(); }
+  });
+});
+
+let gaugeCounter=0;
+function gaugeSVG(score){
+  const angle=(score/100)*180-90;
+  const color=TONE_COLOR[toneOf(score)];
+  const dash=(score/100)*204;
+  const gid='gz'+(gaugeCounter++);
+  return `<svg width="110" height="66" viewBox="0 0 150 90">
+    <path d="M 10 85 A 65 65 0 0 1 140 85" fill="none" stroke="#3A4A3D" stroke-width="10" stroke-linecap="round"/>
+    <path class="gauge-arc" d="M 10 85 A 65 65 0 0 1 140 85" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 204" data-dash="${dash}" style="transition:stroke-dasharray 0.8s cubic-bezier(.34,1.2,.64,1);"/>
+    <g class="needle" transform="translate(75,85) rotate(-90)" data-target="${angle}"><line x1="0" y1="0" x2="0" y2="-55" stroke="#EFE8DA" stroke-width="3" stroke-linecap="round"/></g>
+    <circle cx="75" cy="85" r="5" fill="#EFE8DA"/>
+  </svg>`;
+}
+function animateGauges(){
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    document.querySelectorAll('.needle').forEach(g=>{ g.style.transform=`translate(75px,85px) rotate(${g.dataset.target}deg)`; });
+    document.querySelectorAll('.gauge-arc').forEach(a=>{ a.setAttribute('stroke-dasharray', `${a.dataset.dash} 204`); });
+  }));
+}
+
+function effectiveWeather(parcela, w){
+  const delta=orientationDelta(parcela.orientation)+canopyDelta(parcela.canopy);
+  return {temp:w.temp, humidity:clamp(w.humidity+delta,0,100), rain24h:w.rain24h};
+}
+function diseaseScore(disease, parcela, w){
+  const ew=effectiveWeather(parcela,w);
+  const base=disease.risk(ew);
+  const factor=(VARIETIES[parcela.variety]||VARIETIES["Otra / no listada"])[disease.id];
+  return clamp(Math.round(base*factor),0,100);
+}
+function isDiseaseInSeason(disease, parcela, curDoy){
+  const calendar=inWindow(curDoy,disease.windowStart,disease.windowEnd);
+  if(disease.id==='botritis'){
+    const manual=botritisAppliesForPheno(parcela.pheno);
+    if(manual!==null) return manual;
+  }
+  return calendar;
+}
+
+/* ================= ESCENA ILUSTRADA DE LA PARRA ================= */
+function renderVineScene(parcela, w, curDoy){
+  const states={};
+  DISEASES.forEach(d=>{
+    if(!isDiseaseInSeason(d,parcela,curDoy)){ states[d.id]=null; return; }
+    states[d.id]=toneOf(diseaseScore(d,parcela,w));
+  });
+  const mildiuOn=states.mildiu==='mid'||states.mildiu==='high';
+  const oidioOn=states.oidio==='mid'||states.oidio==='high';
+  const botritisOn=states.botritis==='mid'||states.botritis==='high';
+  const anyOn=mildiuOn||oidioOn||botritisOn;
+  const leafColor= mildiuOn? '#5C6B3A' : '#3E5A34';
+  const leaves=[[70,60],[130,50],[190,65],[250,55],[100,110],[220,105],[160,95]];
+  let leafSvg=leaves.map(([x,y],i)=>{
+    let extra='';
+    if(mildiuOn && i%2===0) extra+=`<ellipse cx="${x-4}" cy="${y+3}" rx="7" ry="5" fill="#C9A227" opacity="0.6"/>`;
+    if(oidioOn && i%3===0) extra+=`<circle cx="${x+3}" cy="${y-4}" r="1.6" fill="#EFE8DA"/><circle cx="${x-3}" cy="${y+2}" r="1.2" fill="#EFE8DA"/><circle cx="${x+5}" cy="${y+3}" r="1.3" fill="#EFE8DA"/>`;
+    return `<path d="M${x} ${y} Q${x-16} ${y-14} ${x-4} ${y-26} Q${x+18} ${y-20} ${x+16} ${y} Q${x+8} ${y+14} ${x} ${y}z" fill="${leafColor}" stroke="#233225" stroke-width="0.8"/>${extra}`;
+  }).join('');
+  const clusters=[[105,130],[195,128],[150,140]];
+  let clusterSvg=clusters.map(([x,y])=>{
+    const grapeColor= botritisOn? '#6B6459' : '#5C2A55';
+    let dots='';
+    for(let r=0;r<3;r++){ for(let c=0;c<3-((r+1)%2);c++){
+      dots+=`<circle cx="${x-6+c*6+((r%2)*3)}" cy="${y+r*6}" r="4" fill="${grapeColor}"/>`;
+    }}
+    const mold = botritisOn ? `<circle cx="${x}" cy="${y+8}" r="9" fill="#B7AF9E" opacity="0.4"/>` : '';
+    return `<g>${dots}${mold}</g>`;
+  }).join('');
+  const sun = !anyOn ? `<circle cx="270" cy="24" r="12" fill="#C9A227" opacity="0.85"/>` : '';
+  const svg=`<svg width="100%" height="180" viewBox="0 0 300 180" style="display:block; margin:0 auto;">
+    ${sun}
+    <path d="M20 165 Q150 175 280 165" stroke="#3A4A3D" stroke-width="2" fill="none"/>
+    <path d="M150 165 L150 40" stroke="#5C4326" stroke-width="6" stroke-linecap="round"/>
+    <path d="M150 90 Q90 80 60 100" stroke="#5C4326" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M150 70 Q210 65 245 90" stroke="#5C4326" stroke-width="4" fill="none" stroke-linecap="round"/>
+    ${leafSvg}
+    ${clusterSvg}
+  </svg>`;
+  let caption;
+  if(!anyOn){ caption='Tu viñedo luce <b>sano</b> hoy — condiciones de bajo riesgo.'; }
+  else{
+    const names=[];
+    if(mildiuOn) names.push('mildiu');
+    if(oidioOn) names.push('oídio');
+    if(botritisOn) names.push('botritis');
+    caption=`Riesgo visible de <b>${names.join(' y ')}</b> — así se vería el efecto si no se actúa. Revisá el detalle abajo.`;
+  }
+  return `<div class="scene-card">${svg}<div class="scene-caption">${caption}</div></div>`;
+}
+
+/* ================= LÍNEA DE TIEMPO FENOLÓGICA ================= */
+const SEASON_START=doy(9,1); // 1 sept, referencia 0 del eje
+function sdi(d){ return d>=SEASON_START ? d-SEASON_START : d+365-SEASON_START; }
+const SEASON_LEN=sdi(doy(5,31));
+const STAGES=[
+  {label:"Brotación", doy:doy(10,1)},
+  {label:"Floración", doy:doy(11,15)},
+  {label:"Cuajado", doy:doy(12,10)},
+  {label:"Envero", doy:doy(1,20)},
+  {label:"Cosecha", doy:doy(3,10)}
+];
+function renderPhenoTimeline(curDoy, parcela){
+  const W=460,H=100;
+  const xOf=(d)=> 20 + (sdi(d)/SEASON_LEN)*(W-40);
+  const todayX=xOf(curDoy);
+  const inRange = sdi(curDoy)>=0 && sdi(curDoy)<=SEASON_LEN;
+  const bands=DISEASES.map((d,i)=>{
+    const y=30+i*11;
+    const x1=xOf(d.windowStart), x2 = d.windowEnd<d.windowStart? xOf(d.windowStart+ (sdi(d.windowEnd)-sdi(d.windowStart)+365)%365 ) : xOf(d.windowEnd);
+    // manejar wraparound del eje directamente con sdi
+    const sx1=20+(sdi(d.windowStart)/SEASON_LEN)*(W-40);
+    const sdEnd = sdi(d.windowEnd) < sdi(d.windowStart) ? SEASON_LEN : sdi(d.windowEnd);
+    const sx2=20+(sdEnd/SEASON_LEN)*(W-40);
+    return `<rect x="${sx1}" y="${y}" width="${Math.max(2,sx2-sx1)}" height="7" rx="3" fill="${DISEASE_COLOR[d.id]}" opacity="0.75"/>`;
+  }).join('');
+  const stages=STAGES.map(s=>{
+    const x=xOf(s.doy);
+    return `<circle cx="${x}" cy="72" r="3.5" fill="#C9A227"/><text class="timeline-stage-label" x="${x}" y="88">${s.label}</text>`;
+  }).join('');
+  const todayMark = inRange ? `<line x1="${todayX}" y1="20" x2="${todayX}" y2="76" stroke="#EFE8DA" stroke-width="1.5" stroke-dasharray="2,2"/><polygon points="${todayX-4},16 ${todayX+4},16 ${todayX},22" fill="#EFE8DA"/>` : '';
+  const svg=`<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}">
+    <line x1="20" y1="72" x2="${W-20}" y2="72" stroke="#3A4A3D" stroke-width="1"/>
+    ${bands}
+    ${stages}
+    ${todayMark}
+  </svg>`;
+  const legend=DISEASES.map(d=>`<span><i style="background:${DISEASE_COLOR[d.id]}"></i>${d.name}</span>`).join('');
+  return `<div class="timeline-card">
+    <div class="timeline-title">Calendario fenológico y ventanas de riesgo (aproximado, ${parcela.pheno?PHENO_LABELS[parcela.pheno]+' declarado':'sin etapa declarada'})</div>
+    ${svg}
+    <div class="timeline-legend">${legend}</div>
+  </div>`;
+}
+
+function diseaseCard(d, parcela, weather, curDoy){
+  const inSeason=isDiseaseInSeason(d,parcela,curDoy);
+  const hasAdj = parcela.variety!=="Otra / no listada" || parcela.orientation!=="plano" || parcela.canopy!=="media";
+  let bodyTop;
+  if(!inSeason){
+    const reason = parcela.pheno && d.id==='botritis' ? `Etapa fenológica declarada: ${PHENO_LABELS[parcela.pheno]} (sin racimo susceptible).` : `Ventana de riesgo: ${d.windowText}.`;
+    bodyTop=`<div class="dcard-body">
+      <div class="dcard-title"><h3>${d.name}</h3><span>${d.latin}</span></div>
+      <div class="out-season">Fuera de periodo crítico. ${reason}</div>
+    </div><div class="chevron">▾</div>`;
+  } else {
+    const score=diseaseScore(d,parcela,weather);
+    const level=riskLevel(score);
+    const color=TONE_COLOR[toneOf(score)];
+    const icon=toneOf(score)==="low"?ICONS.check:`<span style="color:${color}">${ICONS.warn}</span>`;
+    bodyTop=`<div class="gauge-wrap">${gaugeSVG(score)}<div class="gauge-score" style="color:${color}">${score}</div><div class="gauge-label">${level.label}</div></div>
+    <div class="dcard-body">
+      <div class="dcard-title"><h3>${d.name}</h3><span>${d.latin}</span></div>
+      <div class="level-row" style="color:${color}">${icon} ${level.label}</div>
+      ${hasAdj?`<div class="adj-note">Ajustado por ${parcela.variety} · orientación ${parcela.orientation} · canopia ${parcela.canopy}</div>`:''}
+    </div><div class="chevron">▾</div>`;
+  }
+  const tiers=d.treatments.map(t=>`
+    <div class="treat-tier">
+      <div class="treat-tier-name">${t.tier}</div>
+      <div class="treat-tier-desc">${t.desc}</div>
+      <ul>${t.items.map(i=>`<li>${i}</li>`).join('')}</ul>
+    </div>`).join('');
+  return `<div class="dcard" style="--accent:${DISEASE_COLOR[d.id]}">
+    <div class="dcard-top" onclick="toggleTreat('${d.id}')">${bodyTop}</div>
+    <div class="treat-panel" id="treat-${d.id}">
+      <div class="symptom-box">${SYMPTOM_ICON[d.id]}<div class="stext"><b>Cómo reconocerlo en campo</b>${d.symptom}</div></div>
+      ${tiers}
+      <button class="log-btn" onclick="goToRegister('${d.id}')">📋 Registrar fumigación para ${d.name}</button>
+      <div class="trend-wrap"><div class="trend-title">Tendencia próximos 5 días</div><div id="trend-${d.id}"></div></div>
+    </div>
+  </div>`;
+}
+/* ================= PRONÓSTICO 5 DÍAS Y TENDENCIA ================= */
+let forecastByParcela={};
+async function fetchForecast(lat,lon){
+  try{
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relative_humidity_2m,precipitation&forecast_days=6&timezone=auto`;
+    const res=await fetch(url);
+    const data=await res.json();
+    const byDay={};
+    data.hourly.time.forEach((t,i)=>{
+      const day=t.slice(0,10);
+      if(!byDay[day]) byDay[day]={temps:[],hums:[],rain:0};
+      byDay[day].temps.push(data.hourly.temperature_2m[i]);
+      byDay[day].hums.push(data.hourly.relative_humidity_2m[i]);
+      byDay[day].rain+=data.hourly.precipitation[i]||0;
+    });
+    const days=Object.keys(byDay).sort().slice(0,6).map(day=>{
+      const b=byDay[day];
+      const dt=new Date(day+'T12:00:00');
+      return {
+        date:day, doy:todayDoy(dt),
+        label:dt.toLocaleDateString('es-BO',{weekday:'short'}).replace('.',''),
+        temp: b.temps.reduce((a,c)=>a+c,0)/b.temps.length,
+        humidity: Math.max(...b.hums),
+        rain24h: b.rain
+      };
+    });
+    return days;
+  }catch(e){ return null; }
+}
+function trendSVG(days, disease, parcela){
+  const W=260,H=54;
+  const scores=days.map(d=> isDiseaseInSeason(disease,parcela,d.doy) ? diseaseScore(disease,parcela,d) : null);
+  const usable=scores.map((s,i)=> s===null? null : {i,s});
+  const valid=usable.filter(Boolean);
+  if(valid.length===0){ return `<div class="empty-note" style="padding:4px 0;">Fuera de temporada en los próximos días.</div>`; }
+  const stepX=(W-20)/(days.length-1);
+  const yOf=(s)=> H-8-(s/100)*(H-20);
+  const pathPts=valid.map(v=>`${10+v.i*stepX},${yOf(v.s)}`).join(' ');
+  const color=DISEASE_COLOR[disease.id];
+  const dots=valid.map(v=>`<circle cx="${10+v.i*stepX}" cy="${yOf(v.s)}" r="3" fill="${TONE_COLOR[toneOf(v.s)]}" stroke="${color}" stroke-width="1"/>`).join('');
+  const labels=days.map((d,i)=>`<text x="${10+i*stepX}" y="${H-1}" font-size="8" fill="#8A9188" text-anchor="middle">${d.label}</text>`).join('');
+  return `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}">
+    <polyline points="${pathPts}" fill="none" stroke="${color}" stroke-width="1.6" opacity="0.8"/>
+    ${dots}${labels}
+  </svg>`;
+}
+async function renderTrends(parcela){
+  let days=forecastByParcela[parcela.id];
+  if(!days){
+    days=await fetchForecast(parcela.lat,parcela.lon);
+    if(days) forecastByParcela[parcela.id]=days;
+  }
+  if(!days) return;
+  DISEASES.forEach(d=>{
+    const el=document.getElementById('trend-'+d.id);
+    if(el) el.innerHTML=trendSVG(days,d,parcela);
+  });
+}
+function toggleTreat(id){document.getElementById('treat-'+id).classList.toggle('open');}
+function goToRegister(id){
+  document.querySelector('.tab[data-view="registro"]').click();
+  document.getElementById('regDisease').value=id;
+}
+
+function renderWeather(w){
+  const parcela=currentParcela();
+  lastWeatherByParcela[parcela.id]=w;
+  const curDoy=todayDoy(new Date());
+  const anyHigh=DISEASES.some(d=> isDiseaseInSeason(d,parcela,curDoy) && diseaseScore(d,parcela,w)>=70);
+  let html='';
+  if(anyHigh){
+    html+=`<div class="alert">${ICONS.alertBig} <div><b>Condiciones de riesgo alto en ${parcela.name}</b><p>Se recomienda inspección inmediata para evaluar necesidad de fumigación. Revisá el detalle de tratamientos abajo.</p></div></div>`;
+  }
+  html+=`<div class="stats">
+    <div class="stat">${ICONS.thermo}<div class="val">${w.temp.toFixed(1)}°C</div><div class="lbl">Temp.</div></div>
+    <div class="stat">${ICONS.drop}<div class="val">${w.humidity}%</div><div class="lbl">Humedad</div></div>
+    <div class="stat">${ICONS.rain}<div class="val">${w.rain24h.toFixed(1)}mm</div><div class="lbl">Lluvia 24h</div></div>
+  </div>`;
+  DISEASES.forEach(d=>{ html+=diseaseCard(d,parcela,w,curDoy); });
+  content.innerHTML=html;
+  animateGauges();
+  document.getElementById('vineScene').innerHTML=renderVineScene(parcela,w,curDoy);
+  document.getElementById('phenoTimeline').innerHTML=renderPhenoTimeline(curDoy,parcela);
+  renderTrends(parcela);
+  const man=getManual(parcela.id);
+  modeBadge.innerHTML = `<span class="badge">${man.mode?'✏️ Modo manual':'🌐 Clima en vivo'}</span><span class="badge">🍇 ${parcela.variety}</span>`;
+
+  saveHistoryEntry(parcela.id,w,curDoy,parcela);
+  maybeNotify(parcela,w,curDoy);
+  renderOverview();
+}
+
+async function fetchWeather(lat,lon){
+  content.innerHTML='<div class="loading">⏳ Cargando clima...</div>';
+  try{
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relative_humidity_2m,precipitation&past_days=1&forecast_days=1&timezone=auto`;
+    const res=await fetch(url);
+    const data=await res.json();
+    const times=data.hourly.time;
+    let nowIdx=times.findIndex(t=>new Date(t)>new Date());
+    const idx=nowIdx>0?nowIdx-1:times.length-1;
+    const temp=data.hourly.temperature_2m[idx];
+    const humidity=data.hourly.relative_humidity_2m[idx];
+    const last24=data.hourly.precipitation.slice(Math.max(0,idx-24),idx+1);
+    const rain24h=last24.reduce((a,b)=>a+(b||0),0);
+    renderWeather({temp,humidity,rain24h});
+  }catch(e){
+    content.innerHTML='<div class="loading" style="color:#E08070">No se pudo obtener el clima. Revisá tu conexión.</div>';
+  }
+}
+function refreshDiagnosis(){
+  const parcela=currentParcela();
+  const man=getManual(parcela.id);
+  if(man.mode){ renderWeather({temp:man.temp,humidity:man.humidity,rain24h:man.rain24h}); }
+  else { fetchWeather(parcela.lat,parcela.lon); }
+}
+function onParcelaChanged(){
+  renderParcelSelect();
+  refreshDiagnosis();
+}
+
+async function ensureWeatherFor(parcela){
+  if(lastWeatherByParcela[parcela.id]) return lastWeatherByParcela[parcela.id];
+  const man=getManual(parcela.id);
+  if(man.mode) return {temp:man.temp,humidity:man.humidity,rain24h:man.rain24h};
+  try{
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${parcela.lat}&longitude=${parcela.lon}&hourly=temperature_2m,relative_humidity_2m,precipitation&past_days=1&forecast_days=1&timezone=auto`;
+    const res=await fetch(url);
+    const data=await res.json();
+    const times=data.hourly.time;
+    let nowIdx=times.findIndex(t=>new Date(t)>new Date());
+    const idx=nowIdx>0?nowIdx-1:times.length-1;
+    const w={temp:data.hourly.temperature_2m[idx],humidity:data.hourly.relative_humidity_2m[idx],rain24h:0};
+    lastWeatherByParcela[parcela.id]=w;
+    return w;
+  }catch(e){ return null; }
+}
+async function renderOverview(){
+  const card=document.getElementById('overviewCard');
+  const list=document.getElementById('overviewList');
+  if(parcelas.length<2){ card.style.display='none'; return; }
+  card.style.display='block';
+  const curDoy=todayDoy(new Date());
+  let rows='';
+  for(const p of parcelas){
+    const w=await ensureWeatherFor(p);
+    let dotsHtml='';
+    if(w){
+      dotsHtml=DISEASES.map(d=>{
+        if(!isDiseaseInSeason(d,p,curDoy)) return `<span class="dot" style="background:#3A4A3D"></span>`;
+        const s=diseaseScore(d,p,w);
+        return `<span class="dot" style="background:${TONE_COLOR[toneOf(s)]}"></span>`;
+      }).join('');
+    } else { dotsHtml='—'; }
+    rows+=`<div class="overview-row"><span>${p.name}</span><span class="dots">${dotsHtml}</span></div>`;
+  }
+  list.innerHTML=rows;
+}
+
+let npLoc=null;
+const npSuggestions=document.getElementById('npSuggestions');
+const npLocSearch=document.getElementById('npLocSearch');
+let npSearchTimeout;
+npLocSearch.addEventListener('input',(e)=>{
+  const q=e.target.value;
+  clearTimeout(npSearchTimeout);
+  if(q.trim().length<3){npSuggestions.style.display='none';return;}
+  npSearchTimeout=setTimeout(async ()=>{
+    try{
+      const res=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=5&language=es`);
+      const data=await res.json();
+      const results=data.results||[];
+      if(results.length===0){npSuggestions.style.display='none';return;}
+      npSuggestions.innerHTML=results.map(s=>
+        `<button data-lat="${s.latitude}" data-lon="${s.longitude}" data-name="${s.name}, ${s.country}">${s.name}, ${s.admin1?s.admin1+', ':''}${s.country}</button>`
+      ).join('');
+      npSuggestions.style.display='block';
+      npSuggestions.querySelectorAll('button').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          npLoc={name:btn.dataset.name, lat:parseFloat(btn.dataset.lat), lon:parseFloat(btn.dataset.lon)};
+          npLocSearch.value=npLoc.name;
+          npSuggestions.style.display='none';
+          document.getElementById('npLocConfirm').textContent='✓ Ubicación seleccionada: '+npLoc.name;
+        });
+      });
+    }catch(e){npSuggestions.style.display='none';}
+  },350);
+});
+
+document.getElementById('npSaveBtn').addEventListener('click',()=>{
+  const name=document.getElementById('npName').value.trim();
+  if(!name){ alert('Ponele un nombre a la parcela.'); return; }
+  if(!npLoc){ alert('Buscá y seleccioná una ubicación de la lista.'); return; }
+  const p={
+    id:'p_'+Date.now(), name, locName:npLoc.name, lat:npLoc.lat, lon:npLoc.lon,
+    variety:document.getElementById('npVariety').value,
+    orientation:document.getElementById('npOrientation').value,
+    canopy:document.getElementById('npCanopy').value,
+    pheno:document.getElementById('npPheno').value
+  };
+  parcelas.push(p);
+  saveParcelas(parcelas);
+  setCurrentParcela(p.id);
+  document.getElementById('npName').value='';
+  npLocSearch.value='';
+  document.getElementById('npLocConfirm').textContent='';
+  npLoc=null;
+  renderParcelList();
+  renderParcelSelect();
+  document.querySelector('.tab[data-view="panel"]').click();
+  refreshDiagnosis();
+});
+
+function renderParcelList(){
+  const el=document.getElementById('parcelList');
+  el.innerHTML=parcelas.map(p=>`
+    <div class="pcard">
+      <div class="pcard-head"><b>${p.name}</b> ${p.id===currentParcelaId?'<span class="badge" style="margin:0;">activa</span>':''}</div>
+      <div class="pcard-meta">${p.locName}<br>${p.variety} · orientación ${p.orientation} · canopia ${p.canopy}${p.pheno?' · '+PHENO_LABELS[p.pheno]:''}</div>
+      <div class="pcard-actions">
+        <button class="icon-btn" style="flex:1" onclick="selectParcelFromList('${p.id}')">Seleccionar</button>
+        ${parcelas.length>1?`<button class="btn danger" style="margin:0;flex:1;padding:6px;" onclick="deleteParcel('${p.id}')">Eliminar</button>`:''}
+      </div>
+    </div>`).join('');
+}
+function selectParcelFromList(id){
+  setCurrentParcela(id);
+  renderParcelSelect();
+  renderParcelList();
+  document.querySelector('.tab[data-view="panel"]').click();
+  refreshDiagnosis();
+}
+function deleteParcel(id){
+  if(!confirm('¿Eliminar esta parcela? No se borra su historial guardado.')) return;
+  parcelas=parcelas.filter(p=>p.id!==id);
+  saveParcelas(parcelas);
+  if(currentParcelaId===id) setCurrentParcela(parcelas[0].id);
+  renderParcelList();
+  renderParcelSelect();
+  refreshDiagnosis();
+}
+
+function syncManualUI(){
+  const man=getManual(currentParcelaId);
+  document.getElementById('manualToggle').checked=man.mode;
+  document.getElementById('manTemp').value=man.temp ?? '';
+  document.getElementById('manHum').value=man.humidity ?? '';
+  document.getElementById('manRain').value=man.rain24h ?? '';
+}
+document.getElementById('manApplyBtn').addEventListener('click',()=>{
+  const t=parseFloat(document.getElementById('manTemp').value);
+  const h=parseFloat(document.getElementById('manHum').value);
+  const r=parseFloat(document.getElementById('manRain').value);
+  if(isNaN(t)||isNaN(h)){ alert('Ingresá al menos temperatura y humedad.'); return; }
+  manualState[currentParcelaId]={mode:true, temp:t, humidity:h, rain24h:isNaN(r)?0:r};
+  document.querySelector('.tab[data-view="panel"]').click();
+  refreshDiagnosis();
+});
+document.getElementById('manClearBtn').addEventListener('click',()=>{
+  manualState[currentParcelaId]={...getManual(currentParcelaId), mode:false};
+  document.querySelector('.tab[data-view="panel"]').click();
+  refreshDiagnosis();
+});
+document.getElementById('manualToggle').addEventListener('change',(e)=>{
+  manualState[currentParcelaId]={...getManual(currentParcelaId), mode:e.target.checked};
+  refreshDiagnosis();
+});
+
+function fumigKey(id){ return 'vigia_fumigaciones_'+id; }
+function loadFumig(id){ try{return JSON.parse(localStorage.getItem(fumigKey(id))||'[]');}catch(e){return [];} }
+function saveFumig(id,arr){ localStorage.setItem(fumigKey(id), JSON.stringify(arr)); }
+
+document.getElementById('regDate').valueAsDate = new Date();
+document.getElementById('regSaveBtn').addEventListener('click',()=>{
+  const rec={
+    disease: document.getElementById('regDisease').value,
+    date: document.getElementById('regDate').value,
+    product: document.getElementById('regProduct').value.trim(),
+    notes: document.getElementById('regNotes').value.trim()
+  };
+  if(!rec.product){ alert('Indicá el producto o tratamiento aplicado.'); return; }
+  const arr=loadFumig(currentParcelaId);
+  arr.unshift(rec);
+  saveFumig(currentParcelaId,arr);
+  document.getElementById('regProduct').value='';
+  document.getElementById('regNotes').value='';
+  renderFumigList();
+});
+function renderFumigList(){
+  const arr=loadFumig(currentParcelaId);
+  const el=document.getElementById('fumigList');
+  if(arr.length===0){ el.innerHTML='<p class="empty-note">Todavía no registraste fumigaciones en esta parcela.</p>'; return; }
+  const names={mildiu:'Mildiu',oidio:'Oídio',botritis:'Botritis'};
+  el.innerHTML=arr.map(r=>`
+    <div class="rec-item">
+      <div class="rdate">${r.date} · ${names[r.disease]||r.disease}</div>
+      <div><b>${r.product}</b></div>
+      ${r.notes?`<div class="rmeta">${r.notes}</div>`:''}
+    </div>`).join('');
+}
+document.getElementById('exportBtn').addEventListener('click',()=>{
+  const arr=loadFumig(currentParcelaId);
+  const hist=loadHist(currentParcelaId);
+  let csv='Fecha,Enfermedad,Producto,Observacion\n';
+  arr.forEach(r=>{ csv+=`${r.date},${r.disease},"${r.product.replace(/"/g,'""')}","${(r.notes||'').replace(/"/g,'""')}"\n`; });
+  csv+='\nHistorial de riesgo diario\nFecha,Mildiu,Oidio,Botritis\n';
+  Object.keys(hist).sort().forEach(k=>{
+    const e=hist[k];
+    csv+=`${k},${e.mildiu??''},${e.oidio??''},${e.botritis??''}\n`;
+  });
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`vigia_${currentParcela().name.replace(/\s+/g,'_')}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+function histKey(id){ return 'vigia_historial_'+id; }
+function loadHist(id){ try{return JSON.parse(localStorage.getItem(histKey(id))||'{}');}catch(e){return {};} }
+function saveHistoryEntry(parcelId,w,curDoy,parcela){
+  const hist=loadHist(parcelId);
+  const key=new Date().toISOString().slice(0,10);
+  const entry={};
+  DISEASES.forEach(d=>{
+    entry[d.id]= isDiseaseInSeason(d,parcela,curDoy) ? diseaseScore(d,parcela,w) : null;
+  });
+  hist[key]=entry;
+  const keys=Object.keys(hist).sort();
+  while(keys.length>30){ delete hist[keys.shift()]; }
+  localStorage.setItem(histKey(parcelId), JSON.stringify(hist));
+}
+function renderRiskHistory(){
+  const hist=loadHist(currentParcelaId);
+  const keys=Object.keys(hist).sort().reverse().slice(0,14);
+  const el=document.getElementById('riskHistory');
+  if(keys.length===0){ el.innerHTML='<p class="empty-note">Aún no hay historial para esta parcela.</p>'; return; }
+  let rows=keys.map(k=>{
+    const e=hist[k];
+    const cell=(v)=> v===null||v===undefined ? '—' : v;
+    return `<tr><td style="text-align:left;color:var(--muted)">${k}</td><td>${cell(e.mildiu)}</td><td>${cell(e.oidio)}</td><td>${cell(e.botritis)}</td></tr>`;
+  }).join('');
+  el.innerHTML=`<table class="hist"><tr><th style="text-align:left">Fecha</th><th>Mildiu</th><th>Oídio</th><th>Botritis</th></tr>${rows}</table>`;
+}
+
+document.getElementById('notifBtn').addEventListener('click', async ()=>{
+  if(!('Notification' in window)){ alert('Este navegador no soporta notificaciones.'); return; }
+  const perm=await Notification.requestPermission();
+  if(perm==='granted'){ document.getElementById('notifBtn').innerHTML=ICONS.bell+' Alertas activadas'; }
+});
+let lastNotifDay={};
+function maybeNotify(parcela,w,curDoy){
+  if(!('Notification' in window) || Notification.permission!=='granted') return;
+  const today=new Date().toISOString().slice(0,10);
+  if(lastNotifDay[parcela.id]===today) return;
+  const highRisk=DISEASES.filter(d=> isDiseaseInSeason(d,parcela,curDoy) && diseaseScore(d,parcela,w)>=70);
+  if(highRisk.length>0){
+    lastNotifDay[parcela.id]=today;
+    new Notification('🚨 Alerta roja — Vigía del Viñedo', {
+      body: `${parcela.name}: riesgo alto de ${highRisk.map(d=>d.name).join(' y ')}. Inspeccioná lo antes posible para evaluar fumigación.`,
+      icon: 'icon-192.png'
+    });
+  }
+}
+
+renderParcelSelect();
+refreshDiagnosis();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt',(e)=>{ e.preventDefault(); deferredPrompt=e; });
+</script>
+</body>
+</html>
