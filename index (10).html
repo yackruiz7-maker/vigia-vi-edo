@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Vigía del Viñedo</title>
+<meta name="theme-color" content="#1F3D2B" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F3F1E9; --card:#FFFFFF; --border:#E4E0D2; --text:#22301F; --text2:#3B4A37;
+    --muted:#6B7566; --dim:#8B9385; --header:#1F3D2B; --header2:#274832;
+    --green:#2E7D46; --green-bg:#E4F3E7;
+    --amber:#B8791C; --amber-bg:#FBEED4;
+    --red:#C0392B; --red-bg:#FBE1DD;
+    --mildiu:#4E7A3D; --oidio:#B8791C; --botritis:#8E2F42;
+    --gold:#C9A227;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:'IBM Plex Sans', sans-serif; min-height:100vh; -webkit-tap-highlight-color:transparent;}
+  .app{max-width:480px; margin:0 auto; min-height:100vh; padding-bottom:74px; position:relative;}
+
+  /* ---------- HEADER ---------- */
+  .topbar{background:linear-gradient(160deg,var(--header),var(--header2)); color:#fff; padding:16px 18px 18px; display:flex; align-items:center; justify-content:space-between;}
+  .topbar-left{display:flex; align-items:center; gap:9px;}
+  .topbar h1{font-family:'Fraunces',serif; font-size:19px; margin:0; font-weight:600;}
+  .topbar-loc{font-size:11px; opacity:0.8; display:flex; align-items:center; gap:4px; margin-top:2px;}
+  .topbar-icon-btn{background:rgba(255,255,255,0.12); border:none; border-radius:10px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; color:#fff; cursor:pointer;}
+  .logo-badge{width:34px; height:34px; border-radius:10px; background:rgba(255,255,255,0.14); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+
+  /* ---------- SCREENS ---------- */
+  .screen{display:none; padding:16px 16px 6px;}
+  .screen.active{display:block;}
+  .subheader{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
+  .back-btn{background:var(--card); border:1px solid var(--border); border-radius:10px; width:34px; height:34px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text2); flex-shrink:0;}
+  .subheader h2{font-family:'Fraunces',serif; font-size:19px; margin:0; font-weight:600; flex:1;}
+
+  /* ---------- MOOD CARD ---------- */
+  .mood-card{border-radius:16px; padding:16px; display:flex; align-items:center; gap:14px; margin-bottom:14px;}
+  .mood-card.ok{background:var(--green-bg);}
+  .mood-card.warn{background:var(--amber-bg);}
+  .mood-card.bad{background:var(--red-bg);}
+  .mood-face{width:44px; height:44px; flex-shrink:0;}
+  .mood-title{font-size:12px; color:var(--muted);}
+  .mood-headline{font-family:'Fraunces',serif; font-size:17px; font-weight:600; margin-top:1px;}
+  .mood-card.ok .mood-headline{color:#1E5E32;}
+  .mood-card.warn .mood-headline{color:#8A5A0F;}
+  .mood-card.bad .mood-headline{color:#8E2115;}
+
+  /* ---------- WEATHER STATS ---------- */
+  .wstats{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:16px;}
+  .wstat{background:var(--card); border:1px solid var(--border); border-radius:12px; text-align:center; padding:11px 3px;}
+  .wstat svg{color:var(--muted);}
+  .wstat .val{font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:600; margin-top:3px;}
+  .wstat .lbl{font-size:9px; color:var(--dim); text-transform:uppercase; margin-top:1px;}
+
+  /* ---------- DISEASE LIST ---------- */
+  .section-title{font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:18px 2px 8px; display:flex; align-items:center; justify-content:space-between;}
+  .drow{background:var(--card); border:1px solid var(--border); border-radius:13px; padding:12px 13px; display:flex; align-items:center; gap:11px; margin-bottom:9px; cursor:pointer;}
+  .drow-icon{width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .drow-body{flex:1; min-width:0;}
+  .drow-name{font-weight:600; font-size:14px;}
+  .drow-sub{font-size:10.5px; color:var(--dim); margin-top:1px;}
+  .pill{font-size:10px; font-weight:600; padding:3px 8px; border-radius:20px; white-space:nowrap;}
+  .pill.low{background:var(--green-bg); color:var(--green);}
+  .pill.mid{background:var(--amber-bg); color:var(--amber);}
+  .pill.high{background:var(--red-bg); color:var(--red);}
+  .pill.off{background:#EEEDE4; color:var(--dim);}
+  .drow-score{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted); margin-top:4px; text-align:right;}
+  .drow-chev{color:var(--dim); flex-shrink:0;}
+
+  .forecast-teaser{background:var(--card); border:1px solid var(--border); border-radius:13px; padding:12px 13px; display:flex; align-items:center; gap:11px; cursor:pointer; margin-top:4px;}
+  .forecast-teaser svg{flex-shrink:0; color:var(--amber);}
+  .forecast-teaser .ft-body{flex:1;}
+  .forecast-teaser .ft-title{font-size:13px; font-weight:600;}
+  .forecast-teaser .ft-sub{font-size:11px; color:var(--dim); margin-top:1px;}
+
+  /* ---------- DETAIL SCREEN ---------- */
+  .score-hero{border-radius:16px; padding:18px; margin-bottom:16px;}
+  .score-hero.low{background:var(--green-bg);}
+  .score-hero.mid{background:var(--amber-bg);}
+  .score-hero.high{background:var(--red-bg);}
+  .score-hero.off{background:#EEEDE4;}
+  .score-hero-top{display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.03em;}
+  .score-hero.low .score-hero-top{color:var(--green);}
+  .score-hero.mid .score-hero-top{color:var(--amber);}
+  .score-hero.high .score-hero-top{color:var(--red);}
+  .score-hero.off .score-hero-top{color:var(--muted);}
+  .score-big{font-family:'IBM Plex Mono',monospace; font-size:42px; font-weight:600; margin:6px 0 2px; display:flex; align-items:baseline; gap:6px;}
+  .score-big span{font-size:16px; color:var(--muted); font-weight:400;}
+  .score-hero-note{font-size:12px; color:var(--text2); margin-top:4px;}
+
+  .why-card{background:var(--card); border:1px solid var(--border); border-radius:13px; padding:14px; margin-bottom:14px;}
+  .why-card h3{font-family:'Fraunces',serif; font-size:14px; margin:0 0 10px;}
+  .why-item{display:flex; gap:9px; font-size:12.5px; color:var(--text2); margin-bottom:8px; align-items:flex-start;}
+  .why-item:last-child{margin-bottom:0;}
+  .why-item svg{flex-shrink:0; margin-top:1px; color:var(--muted);}
+
+  .action-card{border-radius:13px; padding:13px 14px; margin-bottom:14px; display:flex; gap:10px; background:var(--amber-bg);}
+  .action-card svg{flex-shrink:0; color:var(--amber); margin-top:1px;}
+  .action-card b{font-size:12.5px; display:block; margin-bottom:2px;}
+  .action-card p{font-size:12px; margin:0; color:var(--text2); line-height:1.4;}
+
+  .btn{width:100%; padding:13px; border-radius:12px; border:none; font-weight:600; font-size:14px; cursor:pointer; font-family:inherit; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:7px;}
+  .btn.primary{background:var(--header); color:#fff;}
+  .btn.secondary{background:var(--card); color:var(--text); border:1px solid var(--border);}
+  .btn.ghost{background:transparent; color:var(--muted); border:1px dashed var(--border);}
+
+  .about-box{background:var(--card); border:1px solid var(--border); border-radius:13px; padding:13px 14px; margin-top:16px;}
+  .about-box h4{font-family:'Fraunces',serif; font-size:13px; margin:0 0 5px;}
+  .about-box p{font-size:12px; color:var(--muted); margin:0; line-height:1.5;}
+
+  /* ---------- TREATMENTS SCREEN ---------- */
+  .treat-group{background:var(--card); border-radius:13px; padding:14px; margin-bottom:12px; border:1px solid var(--border);}
+  .treat-group.curative{border-color:#EBC6C0;}
+  .treat-group h4{font-size:12px; text-transform:uppercase; letter-spacing:.03em; margin:0 0 10px; display:flex; align-items:center; gap:6px;}
+  .treat-group.curative h4{color:var(--red);}
+  .treat-group.preventive h4{color:var(--amber);}
+  .treat-group.cultural h4{color:var(--green);}
+  .treat-line{padding:8px 0; border-bottom:1px solid var(--border); font-size:13px;}
+  .treat-line:last-child{border-bottom:none;}
+  .treat-line b{display:block; font-size:13px;}
+  .treat-line small{color:var(--dim); font-size:11px;}
+
+  /* ---------- FORM ELEMENTS ---------- */
+  label{font-size:12px; color:var(--muted); display:block; margin:12px 0 5px; font-weight:500;}
+  input[type=number], input[type=date], input[type=text], select, textarea{
+    width:100%; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:11px 12px;
+    color:var(--text); font-size:14px; font-family:inherit;
+  }
+  textarea{resize:vertical;}
+  .field-row{display:flex; gap:10px;}
+  .field-row > div{flex:1;}
+
+  /* ---------- BOTTOM NAV ---------- */
+  .bottomnav{position:fixed; bottom:0; left:0; right:0; background:var(--card); border-top:1px solid var(--border); display:flex; max-width:480px; margin:0 auto; z-index:50; padding-bottom:env(safe-area-inset-bottom);}
+  .navbtn{flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:9px 2px 8px; background:none; border:none; color:var(--dim); font-family:inherit; cursor:pointer;}
+  .navbtn.active{color:var(--green);}
+  .navbtn span{font-size:9.5px; font-weight:500;}
+
+  /* ---------- MISC CARDS ---------- */
+  .card{background:var(--card); border:1px solid var(--border); border-radius:13px; padding:14px; margin-bottom:12px;}
+  .card h3{font-family:'Fraunces',serif; font-size:15px; margin:0 0 10px;}
+  .badge-select{display:flex; gap:6px; margin-bottom:14px; overflow-x:auto;}
+  .chip{flex-shrink:0; padding:7px 13px; border-radius:20px; font-size:12px; font-weight:600; border:1px solid var(--border); background:var(--card); color:var(--muted); cursor:pointer;}
+  .chip.active{background:var(--header); color:#fff; border-color:var(--header);}
+
+  .day-row{display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid var(--border);}
+  .day-row:last-child{border-bottom:none;}
+  .day-row .dw{width:46px; flex-shrink:0;}
+  .day-row .dw b{display:block; font-size:13px;}
+  .day-row .dw small{font-size:10px; color:var(--dim);}
+  .day-row .di{width:26px; flex-shrink:0; text-align:center;}
+  .day-row .dbar-wrap{flex:1; height:7px; background:#EEEDE4; border-radius:4px; overflow:hidden;}
+  .day-row .dbar{height:100%; border-radius:4px;}
+  .day-row .dscore{width:56px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:12px; flex-shrink:0;}
+
+  .rec-item{border:1px solid var(--border); background:var(--card); border-radius:11px; padding:11px 12px; margin-bottom:8px; font-size:12.5px;}
+  .rec-item .rdate{color:var(--green); font-weight:600; font-size:11px;}
+  .rec-item .rmeta{color:var(--dim); margin-top:2px;}
+  .rec-item .rprot{display:inline-block; margin-top:5px; font-size:10.5px; background:var(--green-bg); color:var(--green); padding:2px 7px; border-radius:20px;}
+  .empty-note{font-size:12.5px; color:var(--dim); padding:14px 0; text-align:center;}
+
+  table.hist{width:100%; border-collapse:collapse; font-size:11px;}
+  table.hist th, table.hist td{padding:7px 4px; text-align:center; border-bottom:1px solid var(--border);}
+  table.hist th{color:var(--dim); font-weight:600; font-size:9.5px; text-transform:uppercase;}
+
+  .pcard{border:1px solid var(--border); background:var(--card); border-radius:12px; padding:12px 14px; margin-bottom:10px;}
+  .pcard-head{display:flex; justify-content:space-between; align-items:baseline;}
+  .pcard-head b{font-family:'Fraunces',serif; font-size:15px;}
+  .pcard-meta{font-size:11px; color:var(--dim); margin-top:3px; line-height:1.5;}
+  .pcard-actions{display:flex; gap:8px; margin-top:9px;}
+  .pcard-actions button{flex:1; font-size:11.5px; padding:8px; border-radius:8px; cursor:pointer; font-family:inherit; font-weight:600;}
+
+  .stage-strip{display:flex; overflow-x:auto; gap:14px; padding:4px 2px 6px;}
+  .stage-item{flex-shrink:0; text-align:center; width:52px;}
+  .stage-item .si-dot{width:34px; height:34px; border-radius:50%; background:#EEEDE4; display:flex; align-items:center; justify-content:center; margin:0 auto 5px; color:var(--dim);}
+  .stage-item.current .si-dot{background:var(--green); color:#fff;}
+  .stage-item .si-label{font-size:9px; color:var(--dim); line-height:1.2;}
+  .stage-item.current .si-label{color:var(--green); font-weight:600;}
+
+  .sim-result{border-radius:14px; padding:15px; margin-top:16px; border:1.5px dashed;}
+  .sim-result.low{background:var(--green-bg); border-color:var(--green);}
+  .sim-result.mid{background:var(--amber-bg); border-color:var(--amber);}
+  .sim-result.high{background:var(--red-bg); border-color:var(--red);}
+  .sim-result.off{background:#EEEDE4; border-color:var(--dim);}
+  .sim-tag{font-size:10px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; color:var(--muted); margin-bottom:8px;}
+  .sim-row{display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid rgba(0,0,0,0.06); font-size:13px;}
+  .sim-row:last-child{border-bottom:none;}
+  .sim-row b{font-family:'IBM Plex Mono',monospace;}
+
+  .disclaimer{font-size:11px; color:var(--dim); line-height:1.6; margin-top:6px;}
+  .research-banner{background:#2A2F52; color:#E4DFFF; border-radius:12px; padding:10px 13px; margin-bottom:14px; font-size:12px; display:flex; align-items:center; gap:9px;}
+  .research-banner b{color:#fff;}
+  .research-banner button{margin-left:auto; background:rgba(255,255,255,0.15); border:none; color:#fff; font-size:11px; font-weight:600; padding:5px 10px; border-radius:8px; cursor:pointer; flex-shrink:0;}
+  .switch-row{display:flex; align-items:center; justify-content:space-between; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:11px 12px; margin-bottom:8px;}
+  .switch-row span{font-size:13px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo-badge"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="9" r="3" fill="#fff" opacity=".85"/><circle cx="15" cy="9" r="3" fill="#fff" opacity=".85"/><circle cx="12" cy="14.5" r="3" fill="#fff" opacity=".85"/></svg></div>
+      <div>
+        <h1>Vigía del Viñedo</h1>
+        <div class="topbar-loc" id="topbarLoc"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.2"/></svg> Uriondo, Tarija</div>
+      </div>
+    </div>
+    <button class="topbar-icon-btn" onclick="document.querySelector('.navbtn[data-tab=mas]').click()">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+    </button>
+  </div>
+
+  <!-- ============ HOY ============ -->
+  <div class="screen active" id="screen-hoy">
+    <div id="researchBanner"></div>
+    <div id="moodCard"></div>
+    <div id="wStats"></div>
+    <div class="section-title">Riesgo de enfermedades</div>
+    <div id="diseaseList"></div>
+    <div id="forecastTeaser"></div>
+    <button class="btn ghost" id="notifBtn" style="margin-top:16px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+      Activar alertas de inspección
+    </button>
+  </div>
+
+  <!-- ============ DETALLE DE ENFERMEDAD ============ -->
+  <div class="screen" id="screen-detail">
+    <div class="subheader">
+      <button class="back-btn" onclick="showScreen('hoy')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <h2 id="detailTitle">Enfermedad</h2>
+    </div>
+    <div id="detailBody"></div>
+  </div>
+
+  <!-- ============ TRATAMIENTOS ============ -->
+  <div class="screen" id="screen-treatments">
+    <div class="subheader">
+      <button class="back-btn" onclick="showScreen('detail')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <h2 id="treatTitle">Tratamientos</h2>
+    </div>
+    <div id="treatBody"></div>
+  </div>
+
+  <!-- ============ PRONÓSTICO ============ -->
+  <div class="screen" id="screen-pronostico">
+    <div class="subheader"><h2>Pronóstico 6 días</h2></div>
+    <div class="badge-select" id="forecastChips"></div>
+    <div class="card"><div id="forecastList"></div></div>
+    <p class="disclaimer">Pronóstico climático: Open-Meteo. El riesgo de cada día se calcula igual que el diagnóstico de hoy, ajustado por variedad y microclima de la parcela.</p>
+  </div>
+
+  <!-- ============ MANUAL / SIMULADOR ============ -->
+  <div class="screen" id="screen-manual">
+    <div class="subheader"><h2>Simulador</h2></div>
+    <div class="card" style="background:var(--amber-bg); border-color:#EAD9AE;">
+      <p style="font-size:12.5px; color:#6B4E12; margin:0; line-height:1.5;"><b>Modo de prueba:</b> ingresá cualquier combinación de clima y etapa fenológica para ver cómo respondería la app. No se guarda en tu historial ni reemplaza el diagnóstico real de "Hoy".</p>
+    </div>
+    <div class="card">
+      <h3>Datos a simular</h3>
+      <div class="field-row">
+        <div><label>Temperatura (°C)</label><input type="number" id="simTemp" step="0.1" value="22" /></div>
+        <div><label>Humedad relativa (%)</label><input type="number" id="simHum" step="1" value="80" /></div>
+      </div>
+      <div class="field-row">
+        <div><label>Lluvia 24h (mm)</label><input type="number" id="simRain" step="0.1" value="5" /></div>
+        <div><label>Brotes (cm)</label><input type="number" id="simShoot" step="1" value="15" /></div>
+      </div>
+      <label>Etapa fenológica a simular</label>
+      <select id="simPheno">
+        <option value="reposo_brotacion">Reposo / brotación</option>
+        <option value="floracion">Floración</option>
+        <option value="cuajado" selected>Cuajado de baya</option>
+        <option value="envero">Envero</option>
+        <option value="maduracion">Maduración</option>
+        <option value="cosechado">Cosechado</option>
+      </select>
+      <label>Fecha a simular (afecta ventanas de mildiu/oídio)</label>
+      <input type="date" id="simDate" />
+      <button class="btn primary" id="simRunBtn" style="margin-top:16px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>
+        Calcular riesgo simulado
+      </button>
+    </div>
+    <div id="simResults"></div>
+  </div>
+
+  <!-- ============ CONTROL ============ -->
+  <div class="screen" id="screen-control">
+    <div class="subheader"><h2>Control</h2></div>
+    <p style="font-size:12px; color:var(--muted); margin-top:-8px;">Parcela: <b id="ctrlParcelName" style="color:var(--text);"></b></p>
+
+    <div class="card">
+      <h3>Registrar fumigación</h3>
+      <label>Enfermedad tratada</label>
+      <select id="regDisease">
+        <option value="mildiu">Mildiu</option>
+        <option value="oidio">Oídio</option>
+        <option value="botritis">Botritis</option>
+      </select>
+      <label>Tipo de tratamiento aplicado</label>
+      <select id="regType">
+        <option value="curativo">Curativo (síntoma ya visible)</option>
+        <option value="sistemico">Sistémico preventivo-curativo</option>
+        <option value="contacto">Contacto preventivo</option>
+        <option value="cultural">Manejo cultural</option>
+      </select>
+      <div class="field-row">
+        <div><label>Fecha de aplicación</label><input type="date" id="regDate" /></div>
+      </div>
+      <label>Producto aplicado</label>
+      <input type="text" id="regProduct" placeholder="Ej: Oxicloruro de cobre" />
+      <label>Observación en parcela</label>
+      <textarea id="regNotes" rows="2" placeholder="Ej: manchas de aceite en hojas bajeras del sector norte"></textarea>
+      <button class="btn primary" id="regSaveBtn" style="margin-top:16px;">Guardar registro</button>
+      <button class="btn secondary" id="exportBtn">Exportar historial (CSV)</button>
+    </div>
+
+    <div class="section-title">Historial de aplicaciones</div>
+    <div id="fumigList"></div>
+
+    <div class="section-title">Riesgo diario registrado</div>
+    <div class="card"><div id="riskHistory"></div></div>
+  </div>
+
+  <!-- ============ MÁS ============ -->
+  <div class="screen" id="screen-mas">
+    <div class="subheader"><h2>Más</h2></div>
+
+    <button class="btn primary" id="installBtn" style="display:none;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 3v13m0 0l-4-4m4 4l4-4"/><path d="M4 17v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+      Instalar en este dispositivo
+    </button>
+
+    <div class="card">
+      <h3>Modo investigación</h3>
+      <p style="font-size:12px; color:var(--muted); margin:-4px 0 10px;">Fijá una fecha ficticia como "hoy" para explorar el diagnóstico real del clima en cualquier punto de la temporada, y registrar fumigaciones relativas a esa fecha. Ideal para probar la app antes de que empiece la campaña real.</p>
+      <label>Fecha de referencia</label>
+      <input type="date" id="refDateInput" />
+      <button class="btn primary" id="refDateSetBtn" style="margin-top:14px;">Usar esta fecha</button>
+      <button class="btn secondary" id="refDateClearBtn">Restablecer a la fecha real</button>
+    </div>
+
+    <div class="section-title">Parcelas</div>
+    <div id="parcelList"></div>
+    <button class="btn secondary" onclick="document.getElementById('addParcelForm').style.display='block'; this.style.display='none';">+ Agregar parcela</button>
+    <div class="card" id="addParcelForm" style="display:none; margin-top:10px;">
+      <label>Nombre de la parcela</label>
+      <input type="text" id="npName" placeholder="Ej: Parcela El Molino" />
+      <label>Ubicación</label>
+      <input type="text" id="npLocSearch" placeholder="Buscar localidad..." />
+      <div id="npSuggestions"></div>
+      <div id="npLocConfirm" style="font-size:11px; color:var(--muted); margin-top:4px;"></div>
+      <label>Variedad</label>
+      <select id="npVariety"></select>
+      <label>Orientación de la pendiente</label>
+      <select id="npOrientation">
+        <option value="norte">Norte (más sol, más seco)</option>
+        <option value="sur">Sur (más sombra, más húmedo)</option>
+        <option value="este">Este</option>
+        <option value="oeste">Oeste</option>
+        <option value="plano">Plano / sin pendiente</option>
+      </select>
+      <label>Densidad de canopia</label>
+      <select id="npCanopy">
+        <option value="baja">Baja (buena ventilación)</option>
+        <option value="media">Media</option>
+        <option value="alta">Alta (poca ventilación)</option>
+      </select>
+      <label>Etapa fenológica actual (opcional)</label>
+      <select id="npPheno">
+        <option value="">Automático según calendario</option>
+        <option value="reposo_brotacion">Reposo / brotación</option>
+        <option value="floracion">Floración</option>
+        <option value="cuajado">Cuajado de baya</option>
+        <option value="envero">Envero</option>
+        <option value="maduracion">Maduración</option>
+        <option value="cosechado">Cosechado</option>
+      </select>
+      <button class="btn primary" id="npSaveBtn" style="margin-top:14px;">Guardar parcela</button>
+    </div>
+
+    <div class="section-title">Ciclo del viñedo</div>
+    <div class="card"><div class="stage-strip" id="stageStrip"></div></div>
+
+    <div class="about-box">
+      <h4>Sobre esta app</h4>
+      <p id="disclaimerText"></p>
+    </div>
+  </div>
+
+  <div class="bottomnav">
+    <button class="navbtn active" data-tab="hoy"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span>Hoy</span></button>
+    <button class="navbtn" data-tab="pronostico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Pronóstico</span></button>
+    <button class="navbtn" data-tab="manual"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg><span>Simulador</span></button>
+    <button class="navbtn" data-tab="control"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span>Control</span></button>
+    <button class="navbtn" data-tab="mas"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span>Más</span></button>
+  </div>
+</div>
+
+<script>
+/* ================= FECHAS Y VENTANAS FENOLÓGICAS =================
+   Calibrado con Oliva, P. (2020). "Periodos críticos de las principales
+   enfermedades de la vid en el valle central de Tarija, Bolivia" —
+   estación CENAVIT (Uriondo), 45 viñedos, campaña 2014-2015.
+*/
+const CUM_DAYS=[0,31,59,90,120,151,181,212,243,273,304,334];
+function doy(month,day){return CUM_DAYS[month-1]+day;}
+function inWindow(curDoy,startDoy,endDoy){
+  if(startDoy<=endDoy) return curDoy>=startDoy && curDoy<=endDoy;
+  return curDoy>=startDoy || curDoy<=endDoy;
+}
+function todayDoy(d){return doy(d.getMonth()+1,d.getDate());}
+function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+function scoreCurve(v,low,optLow,optHigh,high){
+  if(v<=low||v>=high) return 0;
+  if(v>=optLow&&v<=optHigh) return 100;
+  if(v<optLow) return clamp(((v-low)/(optLow-low))*100,0,100);
+  return clamp(((high-v)/(high-optHigh))*100,0,100);
+}
+function computeMildiuRisk({temp,humidity,rain24h,shootCm}){
+  const tScore=scoreCurve(temp,10,18,25,30);
+  const hScore=humidity>=95?100:humidity>=75?((humidity-75)/20)*80:(humidity/75)*30;
+  let rainBonus=rain24h>=10?20:rain24h>=2?10:0;
+  if(shootCm!==undefined && shootCm>=10 && rain24h>=10 && temp>=10) rainBonus+=10; // regla de los tres dieces
+  return clamp(Math.round(tScore*0.5+hScore*0.4+rainBonus*0.5),0,100);
+}
+function computeOidioRisk({temp,humidity,rain24h}){
+  const tScore=scoreCurve(temp,15,20,28,33);
+  const humidityFactor=humidity<=70?100:humidity<=85?60:20;
+  const rainPenalty=rain24h>5?40:(rain24h>1?15:0);
+  return clamp(Math.round(tScore*0.6+humidityFactor*0.4-rainPenalty),0,100);
+}
+function computeBotritisRisk({temp,humidity}){
+  const tScore=scoreCurve(temp,5,15,23,30);
+  const hScore=humidity>=90?100:humidity>=80?((humidity-80)/10)*70:(humidity/80)*25;
+  return clamp(Math.round(tScore*0.45+hScore*0.55),0,100);
+}
+function riskLevel(score){
+  if(score>=70) return {label:"Alto",tone:"high"};
+  if(score>=40) return {label:"Moderado",tone:"mid"};
+  return {label:"Bajo",tone:"low"};
+}
+function toneOf(score){return score>=70?"high":score>=40?"mid":"low";}
+const TONE_HEX={high:"#C0392B",mid:"#B8791C",low:"#2E7D46"};
+const DISEASE_COLOR={mildiu:"#4E7A3D",oidio:"#B8791C",botritis:"#8E2F42"};
+const DISEASE_BG={mildiu:"#E7F0E1",oidio:"#FBEED4",botritis:"#F5E1E6"};
+
+const DISEASE_ICON={
+  mildiu:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c-5 2-8 6-8 11a8 8 0 0 0 8 7 8 8 0 0 0 8-7c0-5-3-9-8-11z"/><path d="M12 21V9"/></svg>',
+  oidio:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.2 2.2M15.8 15.8L18 18M18 6l-2.2 2.2M8.2 15.8L6 18"/></svg>',
+  botritis:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="9" r="2.3"/><circle cx="15" cy="9" r="2.3"/><circle cx="12" cy="14" r="2.3"/><circle cx="7" cy="18" r="1.9"/><circle cx="17" cy="18" r="1.9"/></svg>'
+};
+
+const DISEASES=[
+  {id:"mildiu", name:"Mildiu", latin:"Plasmopara viticola",
+    windowStart:doy(10,16), windowEnd:doy(3,20),
+    windowText:"16 de octubre – 20 de marzo (hoja y racimo)", risk:computeMildiuRisk,
+    symptom:"Manchas amarillentas translúcidas \"de aceite\" en el haz de la hoja; en el envés, pelusa blanquecina en días húmedos. En racimo, los granos se tornan marrones y se secan.",
+    curative:[{name:"Cimoxanilo o fosetil-Al + cobre",note:"Muy efectivo — aplicar de inmediato ante síntomas visibles"}],
+    preventiveCurative:[{name:"Metalaxil o dimetomorf + mancozeb",note:"Antes de lluvia pronosticada con brotes tiernos"}],
+    preventive:[{name:"Oxicloruro de cobre / caldo bordelés",note:"Preventivo de rutina"},{name:"Mancozeb",note:"Preventivo de rutina"}],
+    cultural:["Deshojado en zona de racimos para mejorar ventilación","Evitar riego por aspersión sobre el follaje"]},
+  {id:"oidio", name:"Oídio", latin:"Erysiphe necator",
+    windowStart:doy(11,16), windowEnd:doy(1,20),
+    windowText:"16 de noviembre – 20 de enero (racimo)", risk:computeOidioRisk,
+    symptom:"Polvillo blanco-grisáceo tipo \"talco\" sobre hoja, brote o racimo. Los granos afectados quedan chicos, con la piel endurecida y a veces rajada.",
+    curative:[{name:"Triazol sistémico: miclobutanil, tebuconazol o difenoconazol",note:"Acción curativa rápida"}],
+    preventiveCurative:[{name:"Azufre mojable en dosis alta + triazol alternado",note:"Rotación anti-resistencia"}],
+    preventive:[{name:"Azufre en polvo o mojable",note:"Cada 10–14 días en clima seco"}],
+    cultural:["Deshoje y despunte para exponer racimos al sol","Evitar exceso de nitrógeno"]},
+  {id:"botritis", name:"Botritis", latin:"Botrytis cinerea",
+    windowStart:doy(12,1), windowEnd:doy(2,20),
+    windowText:"1 de diciembre – 20 de febrero (antes de vendimia)", risk:computeBotritisRisk,
+    symptom:"Pudrición blanda y grisácea que arranca en granos con heridas o muy apretados, cubriéndose de un moho gris polvoriento que se extiende rápido con humedad.",
+    curative:[{name:"Fenhexamida, o ciprodinil + fludioxonil",note:"Respetar período de carencia antes de vendimia"}],
+    preventiveCurative:[{name:"Boscalid o iprodiona",note:"Antes del cierre de racimo"}],
+    preventive:[{name:"Aclareo de racimos compactos",note:"Refuerza aireación en envero"}],
+    cultural:["Deshoje en zona de racimos","Control de vigor y nitrógeno","Control de polilla de la vid / evitar heridas de granizo"]}
+];
+
+const VARIETIES={
+  "Moscatel de Alejandría": {mildiu:1.15, oidio:1.15, botritis:0.85},
+  "Cabernet Sauvignon": {mildiu:1.0, oidio:1.0, botritis:1.0},
+  "Malbec": {mildiu:1.0, oidio:0.95, botritis:1.0},
+  "Syrah": {mildiu:1.0, oidio:1.0, botritis:1.05},
+  "Tempranillo": {mildiu:0.95, oidio:1.0, botritis:1.0},
+  "Chardonnay": {mildiu:1.0, oidio:1.05, botritis:1.2},
+  "Sauvignon Blanc": {mildiu:1.0, oidio:1.0, botritis:1.2},
+  "Otra / no listada": {mildiu:1.0, oidio:1.0, botritis:1.0}
+};
+function orientationDelta(o){ return {norte:-5, sur:5, este:0, oeste:0, plano:0}[o] ?? 0; }
+function canopyDelta(c){ return {baja:-5, media:0, alta:8}[c] ?? 0; }
+const PHENO_LABELS={
+  reposo_brotacion:"Reposo / brotación", floracion:"Floración", cuajado:"Cuajado de baya",
+  envero:"Envero", maduracion:"Maduración", cosechado:"Cosechado"
+};
+function botritisAppliesForPheno(pheno){
+  if(!pheno) return null;
+  return ["cuajado","envero","maduracion"].includes(pheno);
+}
+
+/* ================= PROTECCIÓN POR TRATAMIENTOS APLICADOS ================= */
+const PRODUCT_TYPES={
+  curativo:{label:"Curativo (síntoma ya visible)", protectionDays:8, strength:0.55},
+  sistemico:{label:"Sistémico preventivo-curativo", protectionDays:14, strength:0.60},
+  contacto:{label:"Contacto preventivo", protectionDays:10, strength:0.45},
+  cultural:{label:"Manejo cultural", protectionDays:20, strength:0.20}
+};
+function protectionFactor(daysSince, protectionDays){
+  if(daysSince<0 || daysSince==null) return 0;
+  const full=protectionDays*0.4;
+  if(daysSince<=full) return 1;
+  if(daysSince>=protectionDays) return 0;
+  return 1-((daysSince-full)/(protectionDays-full));
+}
+/* ================= MODO INVESTIGACIÓN (fecha de referencia) ================= */
+let refDateOverride = localStorage.getItem('vigia_ref_date') || null;
+function getRefDate(){ return refDateOverride ? new Date(refDateOverride+'T12:00:00') : new Date(); }
+function isResearchMode(){ return !!refDateOverride; }
+function renderResearchBanner(){
+  const el=document.getElementById('researchBanner');
+  if(!el) return;
+  if(!isResearchMode()){ el.innerHTML=''; return; }
+  const d=getRefDate();
+  el.innerHTML=`<div class="research-banner">${ICONS.calendar}
+    <span>Viendo la app como si hoy fuera <b>${d.toLocaleDateString('es-BO',{day:'numeric',month:'long',year:'numeric'})}</b></span>
+    <button onclick="clearRefDate()">Salir</button>
+  </div>`;
+}
+function applyRefDate(dateStr){
+  refDateOverride=dateStr;
+  localStorage.setItem('vigia_ref_date', dateStr);
+  syncDateInputsToRef();
+  forecastByParcela={};
+  refreshDiagnosis();
+}
+function clearRefDate(){
+  refDateOverride=null;
+  localStorage.removeItem('vigia_ref_date');
+  syncDateInputsToRef();
+  forecastByParcela={};
+  refreshDiagnosis();
+}
+function syncDateInputsToRef(){
+  const rd=getRefDate();
+  const regDateEl=document.getElementById('regDate');
+  if(regDateEl) regDateEl.valueAsDate=rd;
+  const simDateEl=document.getElementById('simDate');
+  if(simDateEl) simDateEl.valueAsDate=rd;
+  const refInput=document.getElementById('refDateInput');
+  if(refInput) refInput.value=refDateOverride || '';
+}
+
+function treatmentReduction(parcelaId, diseaseId, todayDate){
+  const arr=loadFumig(parcelaId).filter(r=>r.disease===diseaseId);
+  if(arr.length===0) return {reduction:0, record:null, daysSince:null};
+  let best=null, bestDays=Infinity;
+  arr.forEach(r=>{
+    const days=Math.round((todayDate - new Date(r.date+'T00:00:00'))/86400000);
+    if(days>=0 && days<bestDays){ bestDays=days; best=r; }
+  });
+  if(!best) return {reduction:0, record:null, daysSince:null};
+  const type=PRODUCT_TYPES[best.type||'contacto'];
+  const factor=protectionFactor(bestDays, type.protectionDays);
+  return {reduction:type.strength*factor, record:best, daysSince:bestDays};
+}
+
+/* ================= PARCELAS (localStorage) ================= */
+function defaultParcela(){
+  return {
+    id:'p_'+Date.now(), name:"Parcela 1", locName:"Uriondo, Tarija, Bolivia",
+    lat:-21.6333, lon:-64.7333, variety:"Moscatel de Alejandría",
+    orientation:"plano", canopy:"media", pheno:""
+  };
+}
+function loadParcelas(){
+  try{
+    const arr=JSON.parse(localStorage.getItem('vigia_parcelas')||'null');
+    if(arr && arr.length) return arr;
+  }catch(e){}
+  const d=[defaultParcela()];
+  localStorage.setItem('vigia_parcelas', JSON.stringify(d));
+  return d;
+}
+function saveParcelas(arr){ localStorage.setItem('vigia_parcelas', JSON.stringify(arr)); }
+let parcelas=loadParcelas();
+let currentParcelaId= localStorage.getItem('vigia_current_parcela') || parcelas[0].id;
+if(!parcelas.find(p=>p.id===currentParcelaId)) currentParcelaId=parcelas[0].id;
+function currentParcela(){ return parcelas.find(p=>p.id===currentParcelaId) || parcelas[0]; }
+function setCurrentParcela(id){ currentParcelaId=id; localStorage.setItem('vigia_current_parcela', id); }
+
+function effectiveWeather(parcela, w){
+  const delta=orientationDelta(parcela.orientation)+canopyDelta(parcela.canopy);
+  return {temp:w.temp, humidity:clamp(w.humidity+delta,0,100), rain24h:w.rain24h, shootCm:w.shootCm};
+}
+function diseaseScore(disease, parcela, w, opts){
+  opts=opts||{};
+  const ew=effectiveWeather(parcela,w);
+  const base=disease.risk(ew);
+  const factor=(VARIETIES[parcela.variety]||VARIETIES["Otra / no listada"])[disease.id];
+  let score=base*factor;
+  let treatInfo=null;
+  if(!opts.skipTreatment){
+    treatInfo=treatmentReduction(parcela.id, disease.id, opts.refDate||getRefDate());
+    score=score*(1-treatInfo.reduction);
+  }
+  return {score:clamp(Math.round(score),0,100), treatInfo};
+}
+function isDiseaseInSeason(disease, parcela, curDoy){
+  const calendar=inWindow(curDoy,disease.windowStart,disease.windowEnd);
+  if(disease.id==='botritis'){
+    const manual=botritisAppliesForPheno(parcela.pheno);
+    if(manual!==null) return manual;
+  }
+  return calendar;
+}
+function reasonsFor(disease, w, parcela, curDoy, treatInfo){
+  const r=[];
+  if(w.rain24h>0) r.push({icon:ICONS.drop, text:`Lluvia acumulada (24h): ${w.rain24h.toFixed(1)}mm`});
+  if(w.humidity>=90) r.push({icon:ICONS.drop, text:`Humedad muy alta: ${w.humidity}%`});
+  else if(w.humidity>=75) r.push({icon:ICONS.drop, text:`Humedad alta: ${w.humidity}%`});
+  r.push({icon:ICONS.thermo, text:`Temperatura: ${w.temp.toFixed(1)}°C`});
+  if(parcela.pheno) r.push({icon:ICONS.leaf, text:`Etapa declarada: ${PHENO_LABELS[parcela.pheno]}`});
+  if(treatInfo && treatInfo.record){
+    r.push({icon:ICONS.shield, text:`Aplicaste "${treatInfo.record.product}" hace ${treatInfo.daysSince} día(s) — protección residual activa (${Math.round(treatInfo.reduction*100)}% de reducción)`});
+  }
+  return r;
+}
+function actionFor(disease, tone){
+  if(tone==='high') return disease.curative[0].name+". "+disease.curative[0].note+".";
+  if(tone==='mid') return disease.preventiveCurative[0].name+". "+disease.preventiveCurative[0].note+".";
+  return disease.cultural[0]+".";
+}
+
+/* ================= ÍCONOS ================= */
+const ICONS={
+  thermo:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 14.76V4a2 2 0 0 0-4 0v10.76a4 4 0 1 0 4 0z"/></svg>',
+  drop:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2.5s6.5 7.2 6.5 11.7a6.5 6.5 0 1 1-13 0C5.5 9.7 12 2.5 12 2.5z"/></svg>',
+  rain:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 15.5a4.5 4.5 0 0 1 .3-9 5.5 5.5 0 0 1 10.6.7A4 4 0 0 1 17 15.5H7z"/><path d="M8 19l-1 2M12 19l-1 2M16 19l-1 2"/></svg>',
+  wind:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h10a3 3 0 1 0-3-3"/><path d="M3 16h13a3 3 0 1 1-3 3"/></svg>',
+  chev:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>',
+  warn:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>',
+  leaf:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c-5 2-8 6-8 11a8 8 0 0 0 8 7 8 8 0 0 0 8-7c0-5-3-9-8-11z"/><path d="M12 21V9"/></svg>',
+  shield:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z"/></svg>',
+  calendar:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  faceOk:'<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#1E5E32" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/><path d="M8.5 14.5c1 1.2 2.2 1.8 3.5 1.8s2.5-.6 3.5-1.8"/></svg>',
+  faceWarn:'<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#8A5A0F" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/><path d="M8.5 15.5h7"/></svg>',
+  faceBad:'<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#8E2115" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/><path d="M8.5 16c1-1.2 2.2-1.8 3.5-1.8s2.5.6 3.5 1.8"/></svg>',
+  register:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>'
+};
+
+/* ================= NAVEGACIÓN ================= */
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+}
+document.querySelectorAll('.navbtn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.navbtn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    showScreen(b.dataset.tab);
+    if(b.dataset.tab==='control'){ document.getElementById('ctrlParcelName').textContent=currentParcela().name; renderFumigList(); renderRiskHistory(); }
+    if(b.dataset.tab==='mas'){ renderParcelList(); renderStageStrip(); }
+    if(b.dataset.tab==='pronostico'){ renderForecastScreen(); }
+  });
+});
+
+/* ================= ESTADO ================= */
+let lastWeatherByParcela={};
+let activeDiseaseId=null;
+
+document.getElementById('disclaimerText').textContent =
+  "Ventanas de riesgo calibradas con el estudio de Oliva, P. (2020), 'Periodos críticos de las principales enfermedades de la vid en el valle central de Tarija, Bolivia' (estación CENAVIT, Uriondo, 45 viñedos). El puntaje se ajusta por variedad, microclima de la parcela y protección residual de tratamientos ya aplicados. Es una herramienta de apoyo — no reemplaza la inspección de campo ni el criterio del ingeniero agrónomo. Datos climáticos: Open-Meteo.";
+
+/* ================= RENDER: HOY ================= */
+function renderMoodCard(parcela, w, curDoy, results){
+  const active=results.filter(r=>r.inSeason);
+  const anyHigh=active.some(r=>toneOf(r.score)==='high');
+  const anyMid=active.some(r=>toneOf(r.score)==='mid');
+  let cls,face,title,headline;
+  if(anyHigh){ cls='bad'; face=ICONS.faceBad; title='Situación de hoy'; headline='Requiere atención'; }
+  else if(anyMid){ cls='warn'; face=ICONS.faceWarn; title='Situación de hoy'; headline='Vigilar de cerca'; }
+  else{ cls='ok'; face=ICONS.faceOk; title='Situación de hoy'; headline='Todo bien por ahora'; }
+  document.getElementById('moodCard').innerHTML=`<div class="mood-card ${cls}">
+    <div class="mood-face">${face}</div>
+    <div><div class="mood-title">${title}</div><div class="mood-headline">${headline}</div></div>
+  </div>`;
+}
+function renderWStats(w){
+  document.getElementById('wStats').innerHTML=`
+    <div class="wstat">${ICONS.thermo}<div class="val">${w.temp.toFixed(1)}°</div><div class="lbl">Temp.</div></div>
+    <div class="wstat">${ICONS.drop}<div class="val">${w.humidity}%</div><div class="lbl">Humedad</div></div>
+    <div class="wstat">${ICONS.rain}<div class="val">${w.rain24h.toFixed(1)}mm</div><div class="lbl">Lluvia</div></div>
+    <div class="wstat">${ICONS.wind}<div class="val">${(w.wind??0).toFixed(0)}km/h</div><div class="lbl">Viento</div></div>`;
+}
+function renderDiseaseList(parcela, w, curDoy){
+  const results=DISEASES.map(d=>{
+    const inSeason=isDiseaseInSeason(d,parcela,curDoy);
+    if(!inSeason) return {d, inSeason:false, score:null, treatInfo:null};
+    const {score,treatInfo}=diseaseScore(d,parcela,w);
+    return {d, inSeason:true, score, treatInfo};
+  });
+  const rows=results.map(({d,inSeason,score})=>{
+    const tone= inSeason? toneOf(score) : 'off';
+    const pillLabel= inSeason? riskLevel(score).label : 'N/A';
+    let sub='';
+    if(!inSeason) sub = d.id==='botritis' && parcela.pheno ? 'Sin racimo susceptible aún' : 'Fuera de temporada';
+    return `<div class="drow" onclick="openDetail('${d.id}')">
+      <div class="drow-icon" style="background:${DISEASE_BG[d.id]}; color:${DISEASE_COLOR[d.id]}">${DISEASE_ICON[d.id]}</div>
+      <div class="drow-body">
+        <div class="drow-name">${d.name}</div>
+        ${sub?`<div class="drow-sub">${sub}</div>`:''}
+      </div>
+      <div style="text-align:right;">
+        <span class="pill ${tone}">${pillLabel.toUpperCase()}</span>
+        ${inSeason?`<div class="drow-score">${score}/100</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('diseaseList').innerHTML=rows;
+  renderMoodCard(parcela,w,curDoy,results);
+  return results;
+}
+async function renderForecastTeaser(parcela){
+  const el=document.getElementById('forecastTeaser');
+  const days=await ensureForecast(parcela);
+  if(!days){ el.innerHTML=''; return; }
+  const curDoy0=days[0].doy;
+  const upcoming=days.slice(1,4);
+  const anyRain=upcoming.some(d=>d.rain24h>1);
+  const worstTone=upcoming.reduce((acc,day)=>{
+    let dayWorst='low';
+    DISEASES.forEach(d=>{
+      if(!isDiseaseInSeason(d,parcela,day.doy)) return;
+      const {score}=diseaseScore(d,parcela,day,{skipTreatment:true});
+      const t=toneOf(score);
+      if(t==='high') dayWorst='high'; else if(t==='mid' && dayWorst!=='high') dayWorst='mid';
+    });
+    if(dayWorst==='high') return 'high';
+    if(dayWorst==='mid' && acc!=='high') return 'mid';
+    return acc;
+  },'low');
+  const msg = worstTone==='high' ? 'Riesgo en aumento en los próximos días.' : (anyRain ? 'Podría llover — revisá el detalle.' : 'Sin condiciones críticas a la vista.');
+  el.innerHTML=`<div class="forecast-teaser" onclick="document.querySelector('.navbtn[data-tab=pronostico]').click()">
+    ${ICONS.calendar}
+    <div class="ft-body"><div class="ft-title">Próximos 3 días</div><div class="ft-sub">${msg}</div></div>
+    ${ICONS.chev}
+  </div>`;
+}
+
+function renderHoy(parcela,w,curDoy){
+  renderWStats(w);
+  renderDiseaseList(parcela,w,curDoy);
+  renderForecastTeaser(parcela);
+  document.getElementById('topbarLoc').innerHTML=`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.2"/></svg> ${parcela.name}`;
+  saveHistoryEntry(parcela.id,w,curDoy,parcela);
+  maybeNotify(parcela,w,curDoy);
+}
+
+/* ================= DETALLE DE ENFERMEDAD ================= */
+function openDetail(diseaseId){
+  activeDiseaseId=diseaseId;
+  const parcela=currentParcela();
+  const w=lastWeatherByParcela[parcela.id];
+  if(!w) return;
+  const d=DISEASES.find(x=>x.id===diseaseId);
+  const curDoy=todayDoy(getRefDate());
+  const inSeason=isDiseaseInSeason(d,parcela,curDoy);
+  document.getElementById('detailTitle').textContent=d.name;
+  let body='';
+  if(!inSeason){
+    const reason = parcela.pheno && d.id==='botritis' ? `Etapa fenológica declarada: ${PHENO_LABELS[parcela.pheno]} — sin racimo susceptible.` : `Ventana de riesgo: ${d.windowText}.`;
+    body=`<div class="score-hero off">
+      <div class="score-hero-top">${ICONS.leaf} Fuera de periodo crítico</div>
+      <p class="score-hero-note">${reason}</p>
+    </div>
+    <div class="why-card"><h3>Sobre ${d.name}</h3><p style="font-size:12.5px;color:var(--text2);line-height:1.5;margin:0;">${d.symptom}</p></div>
+    <button class="btn secondary" onclick="openTreatments('${d.id}')">${ICONS.leaf} Ver tratamientos de todos modos</button>`;
+  } else {
+    const {score,treatInfo}=diseaseScore(d,parcela,w);
+    const tone=toneOf(score);
+    const reasons=reasonsFor(d,w,parcela,curDoy,treatInfo);
+    const action=actionFor(d,tone);
+    body=`<div class="score-hero ${tone}">
+      <div class="score-hero-top">${ICONS.warn} Riesgo ${riskLevel(score).label.toUpperCase()}</div>
+      <div class="score-big">${score}<span>/100</span></div>
+      <p class="score-hero-note">${tone==='high'?'Se recomienda inspección hoy mismo.':tone==='mid'?'Puede subir si las condiciones se mantienen.':'Condiciones controladas por ahora.'}</p>
+    </div>
+    <div class="why-card">
+      <h3>¿Por qué hay este riesgo?</h3>
+      ${reasons.map(r=>`<div class="why-item">${r.icon}<span>${r.text}</span></div>`).join('')}
+    </div>
+    <div class="action-card">${ICONS.warn}<div><b>¿Qué hacer?</b><p>${action}</p></div></div>
+    <button class="btn primary" onclick="openTreatments('${d.id}')">${ICONS.leaf} Ver tratamientos recomendados</button>
+    <button class="btn secondary" onclick="quickRegister('${d.id}')">${ICONS.register} Registrar aplicación</button>`;
+  }
+  document.getElementById('detailBody').innerHTML=body;
+  showScreen('detail');
+}
+
+/* ================= TRATAMIENTOS ================= */
+function openTreatments(diseaseId){
+  const d=DISEASES.find(x=>x.id===diseaseId);
+  document.getElementById('treatTitle').textContent='Tratamientos: '+d.name;
+  const curLine=(t)=>`<div class="treat-line"><b>${t.name}</b><small>${t.note}</small></div>`;
+  const html=`
+    <div class="treat-group curative">
+      <h4>${ICONS.warn} Si YA hay enfermedad (curativo)</h4>
+      ${d.curative.map(curLine).join('')}
+    </div>
+    <div class="treat-group preventive">
+      <h4>${ICONS.shield} Preventivo-curativo (riesgo alto sin síntomas)</h4>
+      ${d.preventiveCurative.map(curLine).join('')}
+    </div>
+    <div class="treat-group preventive">
+      <h4>${ICONS.drop} Si NO hay enfermedad (preventivo)</h4>
+      ${d.preventive.map(curLine).join('')}
+    </div>
+    <div class="treat-group cultural">
+      <h4>${ICONS.leaf} Medidas culturales</h4>
+      ${d.cultural.map(c=>`<div class="treat-line">${c}</div>`).join('')}
+    </div>
+    <button class="btn primary" onclick="quickRegister('${d.id}')">${ICONS.register} Registrar aplicación</button>`;
+  document.getElementById('treatBody').innerHTML=html;
+  showScreen('treatments');
+}
+function quickRegister(diseaseId){
+  document.querySelector('.navbtn[data-tab="control"]').click();
+  document.getElementById('regDisease').value=diseaseId;
+}
+
+/* ================= CLIMA EN VIVO Y PRONÓSTICO ================= */
+async function fetchWeather(lat,lon){
+  try{
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relative_humidity_2m,precipitation&past_days=1&forecast_days=1&timezone=auto`;
+    const res=await fetch(url);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    if(!data.hourly) throw new Error('sin datos horarios');
+    const times=data.hourly.time;
+    let nowIdx=times.findIndex(t=>new Date(t)>new Date());
+    const idx=nowIdx>0?nowIdx-1:times.length-1;
+    const temp=data.hourly.temperature_2m[idx];
+    const humidity=data.hourly.relative_humidity_2m[idx];
+    const last24=data.hourly.precipitation.slice(Math.max(0,idx-24),idx+1);
+    const rain24h=last24.reduce((a,b)=>a+(b||0),0);
+    let wind=0;
+    try{
+      const wurl=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=wind_speed_10m&forecast_days=1&timezone=auto`;
+      const wres=await fetch(wurl);
+      const wdata=await wres.json();
+      const widx=wdata.hourly.time.findIndex(t=>new Date(t)>new Date());
+      wind=wdata.hourly.wind_speed_10m[widx>0?widx-1:0]||0;
+    }catch(e){ wind=0; }
+    return {temp,humidity,rain24h,wind};
+  }catch(e){
+    console.error('Error clima:',e);
+    return null;
+  }
+}
+async function refreshDiagnosis(){
+  const parcela=currentParcela();
+  const refDate=getRefDate();
+  const w=await fetchWeather(parcela.lat,parcela.lon);
+  if(!w){ document.getElementById('diseaseList').innerHTML='<p class="empty-note">No se pudo obtener el clima. Revisá tu conexión.</p>'; return; }
+  lastWeatherByParcela[parcela.id]=w;
+  const curDoy=todayDoy(refDate);
+  renderHoy(parcela,w,curDoy);
+  renderResearchBanner();
+}
+
+let forecastByParcela={};
+async function fetchForecast(lat,lon){
+  try{
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relative_humidity_2m,precipitation&forecast_days=7&timezone=auto`;
+    const res=await fetch(url);
+    const data=await res.json();
+    const byDay={};
+    data.hourly.time.forEach((t,i)=>{
+      const day=t.slice(0,10);
+      if(!byDay[day]) byDay[day]={temps:[],hums:[],rain:0};
+      byDay[day].temps.push(data.hourly.temperature_2m[i]);
+      byDay[day].hums.push(data.hourly.relative_humidity_2m[i]);
+      byDay[day].rain+=data.hourly.precipitation[i]||0;
+    });
+    return Object.keys(byDay).sort().slice(0,7).map(day=>{
+      const b=byDay[day];
+      const dt=new Date(day+'T12:00:00');
+      return {
+        date:day, doy:todayDoy(dt),
+        label:dt.toLocaleDateString('es-BO',{weekday:'short'}).replace('.',''),
+        dnum:dt.getDate(), month:dt.toLocaleDateString('es-BO',{month:'short'}).replace('.',''),
+        temp: b.temps.reduce((a,c)=>a+c,0)/b.temps.length,
+        humidity: Math.max(...b.hums),
+        rain24h: b.rain
+      };
+    });
+  }catch(e){ return null; }
+}
+async function ensureForecast(parcela){
+  if(forecastByParcela[parcela.id]) return forecastByParcela[parcela.id];
+  const days=await fetchForecast(parcela.lat,parcela.lon);
+  if(days) forecastByParcela[parcela.id]=days;
+  return days;
+}
+let forecastChipDisease='mildiu';
+async function renderForecastScreen(){
+  const parcela=currentParcela();
+  const chips=document.getElementById('forecastChips');
+  chips.innerHTML=DISEASES.map(d=>`<button class="chip ${d.id===forecastChipDisease?'active':''}" onclick="setForecastChip('${d.id}')">${d.name}</button>`).join('');
+  const days=await ensureForecast(parcela);
+  const list=document.getElementById('forecastList');
+  if(!days){ list.innerHTML='<p class="empty-note">No se pudo cargar el pronóstico.</p>'; return; }
+  const d=DISEASES.find(x=>x.id===forecastChipDisease);
+  list.innerHTML=days.map((day,i)=>{
+    const inSeason=isDiseaseInSeason(d,parcela,day.doy);
+    const score= inSeason ? diseaseScore(d,parcela,day,{skipTreatment:true}).score : null;
+    const tone= inSeason ? toneOf(score) : 'off';
+    const label= i===0?'Hoy':day.label;
+    return `<div class="day-row">
+      <div class="dw"><b>${label}</b><small>${day.dnum} ${day.month}</small></div>
+      <div class="di">${day.rain24h>1?ICONS.rain:ICONS.drop}</div>
+      <div class="dbar-wrap"><div class="dbar" style="width:${inSeason?score:0}%; background:${inSeason?TONE_HEX[tone]:'#ccc'}"></div></div>
+      <div class="dscore"><span class="pill ${tone}">${inSeason?riskLevel(score).label:'N/A'}</span></div>
+    </div>`;
+  }).join('');
+}
+function setForecastChip(id){ forecastChipDisease=id; renderForecastScreen(); }
+
+/* ================= SIMULADOR ================= */
+document.getElementById('refDateSetBtn').addEventListener('click',()=>{
+  const v=document.getElementById('refDateInput').value;
+  if(!v){ alert('Elegí una fecha primero.'); return; }
+  applyRefDate(v);
+});
+document.getElementById('refDateClearBtn').addEventListener('click',clearRefDate);
+syncDateInputsToRef();
+
+document.getElementById('simDate').valueAsDate=getRefDate();
+document.getElementById('simRunBtn').addEventListener('click',()=>{
+  const parcela=currentParcela();
+  const temp=parseFloat(document.getElementById('simTemp').value);
+  const humidity=parseFloat(document.getElementById('simHum').value);
+  const rain24h=parseFloat(document.getElementById('simRain').value)||0;
+  const shootCm=parseFloat(document.getElementById('simShoot').value)||0;
+  const pheno=document.getElementById('simPheno').value;
+  const simDateVal=document.getElementById('simDate').value;
+  if(isNaN(temp)||isNaN(humidity)){ alert('Completá al menos temperatura y humedad.'); return; }
+  const simDate=simDateVal? new Date(simDateVal+'T12:00:00') : new Date();
+  const curDoy=todayDoy(simDate);
+  const simParcela={...parcela, pheno};
+  const w={temp,humidity,rain24h,shootCm};
+  const results=DISEASES.map(d=>{
+    const inSeason=isDiseaseInSeason(d,simParcela,curDoy);
+    if(!inSeason) return {d,inSeason:false};
+    const {score}=diseaseScore(d,simParcela,w,{skipTreatment:true});
+    return {d,inSeason:true,score};
+  });
+  const rows=results.map(({d,inSeason,score})=>{
+    const tone=inSeason?toneOf(score):'off';
+    return `<div class="sim-row"><span>${DISEASE_ICON[d.id]} ${d.name}</span><b style="color:${inSeason?TONE_HEX[tone]:'#8B9385'}">${inSeason?score+'/100':'Fuera de temporada'}</b></div>`;
+  }).join('');
+  const worstTone=results.some(r=>r.inSeason&&toneOf(r.score)==='high')?'high':results.some(r=>r.inSeason&&toneOf(r.score)==='mid')?'mid':results.some(r=>r.inSeason)?'low':'off';
+  document.getElementById('simResults').innerHTML=`<div class="sim-result ${worstTone}">
+    <div class="sim-tag">Resultado simulado — ${PHENO_LABELS[pheno]}, ${simDate.toLocaleDateString('es-BO')}</div>
+    ${rows}
+  </div>`;
+});
+
+/* ================= REGISTRO DE FUMIGACIONES ================= */
+function fumigKey(id){ return 'vigia_fumigaciones_'+id; }
+function loadFumig(id){ try{return JSON.parse(localStorage.getItem(fumigKey(id))||'[]');}catch(e){return [];} }
+function saveFumig(id,arr){ localStorage.setItem(fumigKey(id), JSON.stringify(arr)); }
+
+document.getElementById('regDate').valueAsDate=getRefDate();
+document.getElementById('regSaveBtn').addEventListener('click',()=>{
+  const rec={
+    disease: document.getElementById('regDisease').value,
+    type: document.getElementById('regType').value,
+    date: document.getElementById('regDate').value,
+    product: document.getElementById('regProduct').value.trim(),
+    notes: document.getElementById('regNotes').value.trim()
+  };
+  if(!rec.product){ alert('Indicá el producto o tratamiento aplicado.'); return; }
+  const arr=loadFumig(currentParcelaId);
+  arr.unshift(rec);
+  saveFumig(currentParcelaId,arr);
+  document.getElementById('regProduct').value='';
+  document.getElementById('regNotes').value='';
+  renderFumigList();
+  forecastByParcela={};
+  refreshDiagnosis();
+});
+function renderFumigList(){
+  const arr=loadFumig(currentParcelaId);
+  const el=document.getElementById('fumigList');
+  if(arr.length===0){ el.innerHTML='<p class="empty-note">Todavía no registraste fumigaciones en esta parcela.</p>'; return; }
+  const names={mildiu:'Mildiu',oidio:'Oídio',botritis:'Botritis'};
+  const today=getRefDate();
+  el.innerHTML=arr.map((r,i)=>{
+    const type=PRODUCT_TYPES[r.type||'contacto'];
+    const days=Math.round((today-new Date(r.date+'T00:00:00'))/86400000);
+    const factor=protectionFactor(days,type.protectionDays);
+    return `<div class="rec-item">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div class="rdate">${r.date} · ${names[r.disease]||r.disease}</div>
+        <button onclick="deleteFumig(${i})" style="background:none; border:none; color:var(--red); cursor:pointer; padding:0 0 0 8px; font-size:11px; font-weight:600;">Borrar</button>
+      </div>
+      <div><b>${r.product}</b></div>
+      <div class="rmeta">${type.label}${r.notes?' · '+r.notes:''}</div>
+      ${factor>0?`<span class="rprot">Protección activa (${Math.round(factor*type.strength*100)}% reducción)</span>`:''}
+    </div>`;
+  }).join('');
+}
+function deleteFumig(i){
+  if(!confirm('¿Borrar este registro de fumigación?')) return;
+  const arr=loadFumig(currentParcelaId);
+  arr.splice(i,1);
+  saveFumig(currentParcelaId,arr);
+  renderFumigList();
+  forecastByParcela={};
+  refreshDiagnosis();
+}
+document.getElementById('exportBtn').addEventListener('click',()=>{
+  const arr=loadFumig(currentParcelaId);
+  const hist=loadHist(currentParcelaId);
+  let csv='Fecha,Enfermedad,Tipo,Producto,Observacion\n';
+  arr.forEach(r=>{ csv+=`${r.date},${r.disease},${r.type||''},"${r.product.replace(/"/g,'""')}","${(r.notes||'').replace(/"/g,'""')}"\n`; });
+  csv+='\nHistorial de riesgo diario\nFecha,Mildiu,Oidio,Botritis\n';
+  Object.keys(hist).sort().forEach(k=>{
+    const e=hist[k];
+    csv+=`${k},${e.mildiu??''},${e.oidio??''},${e.botritis??''}\n`;
+  });
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`vigia_${currentParcela().name.replace(/\s+/g,'_')}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+/* ================= HISTORIAL DE RIESGO DIARIO ================= */
+function histKey(id){ return 'vigia_historial_'+id; }
+function loadHist(id){ try{return JSON.parse(localStorage.getItem(histKey(id))||'{}');}catch(e){return {};} }
+function saveHistoryEntry(parcelId,w,curDoy,parcela){
+  const hist=loadHist(parcelId);
+  const key=getRefDate().toISOString().slice(0,10);
+  const entry={};
+  DISEASES.forEach(d=>{
+    entry[d.id]= isDiseaseInSeason(d,parcela,curDoy) ? diseaseScore(d,parcela,w).score : null;
+  });
+  hist[key]=entry;
+  const keys=Object.keys(hist).sort();
+  while(keys.length>30){ delete hist[keys.shift()]; }
+  localStorage.setItem(histKey(parcelId), JSON.stringify(hist));
+}
+function renderRiskHistory(){
+  const hist=loadHist(currentParcelaId);
+  const keys=Object.keys(hist).sort().reverse().slice(0,14);
+  const el=document.getElementById('riskHistory');
+  if(keys.length===0){ el.innerHTML='<p class="empty-note">Aún no hay historial para esta parcela.</p>'; return; }
+  let rows=keys.map(k=>{
+    const e=hist[k];
+    const cell=(v)=> v===null||v===undefined ? '—' : v;
+    return `<tr><td style="text-align:left;color:var(--muted)">${k}</td><td>${cell(e.mildiu)}</td><td>${cell(e.oidio)}</td><td>${cell(e.botritis)}</td></tr>`;
+  }).join('');
+  el.innerHTML=`<table class="hist"><tr><th style="text-align:left">Fecha</th><th>Mildiu</th><th>Oídio</th><th>Botritis</th></tr>${rows}</table>`;
+}
+
+/* ================= PARCELAS ================= */
+const npVariety=document.getElementById('npVariety');
+npVariety.innerHTML=Object.keys(VARIETIES).map(v=>`<option value="${v}">${v}</option>`).join('');
+let npLoc=null;
+const npLocSearch=document.getElementById('npLocSearch');
+let npSearchTimeout;
+npLocSearch.addEventListener('input',(e)=>{
+  const q=e.target.value;
+  clearTimeout(npSearchTimeout);
+  const sug=document.getElementById('npSuggestions');
+  if(q.trim().length<3){sug.innerHTML='';return;}
+  npSearchTimeout=setTimeout(async ()=>{
+    try{
+      const res=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=5&language=es`);
+      const data=await res.json();
+      const results=data.results||[];
+      sug.innerHTML=results.map(s=>
+        `<div class="chip" style="display:block;margin-bottom:6px;cursor:pointer;" onclick='window.__pickLoc(${s.latitude},${s.longitude},"${(s.name+", "+s.country).replace(/"/g,"")}")'>${s.name}, ${s.admin1?s.admin1+', ':''}${s.country}</div>`
+      ).join('');
+    }catch(e){}
+  },350);
+});
+window.__pickLoc=(lat,lon,name)=>{
+  npLoc={name,lat,lon};
+  npLocSearch.value=name;
+  document.getElementById('npSuggestions').innerHTML='';
+  document.getElementById('npLocConfirm').textContent='✓ Ubicación seleccionada: '+name;
+};
+document.getElementById('npSaveBtn').addEventListener('click',()=>{
+  const name=document.getElementById('npName').value.trim();
+  if(!name){ alert('Ponele un nombre a la parcela.'); return; }
+  if(!npLoc){ alert('Buscá y seleccioná una ubicación de la lista.'); return; }
+  const p={
+    id:'p_'+Date.now(), name, locName:npLoc.name, lat:npLoc.lat, lon:npLoc.lon,
+    variety:document.getElementById('npVariety').value,
+    orientation:document.getElementById('npOrientation').value,
+    canopy:document.getElementById('npCanopy').value,
+    pheno:document.getElementById('npPheno').value
+  };
+  parcelas.push(p);
+  saveParcelas(parcelas);
+  setCurrentParcela(p.id);
+  document.getElementById('npName').value='';
+  npLocSearch.value='';
+  document.getElementById('npLocConfirm').textContent='';
+  npLoc=null;
+  document.getElementById('addParcelForm').style.display='none';
+  renderParcelList();
+  document.querySelector('.navbtn[data-tab="hoy"]').click();
+  refreshDiagnosis();
+});
+function renderParcelList(){
+  const el=document.getElementById('parcelList');
+  el.innerHTML=parcelas.map(p=>`
+    <div class="pcard">
+      <div class="pcard-head"><b>${p.name}</b> ${p.id===currentParcelaId?'<span class="pill low">ACTIVA</span>':''}</div>
+      <div class="pcard-meta">${p.locName}<br>${p.variety} · orientación ${p.orientation} · canopia ${p.canopy}${p.pheno?' · '+PHENO_LABELS[p.pheno]:''}</div>
+      <div class="pcard-actions">
+        <button class="btn secondary" style="margin:0;" onclick="selectParcelFromList('${p.id}')">Seleccionar</button>
+        ${parcelas.length>1?`<button class="btn ghost" style="margin:0;color:var(--red);border-color:#EBC6C0;" onclick="deleteParcel('${p.id}')">Eliminar</button>`:''}
+      </div>
+    </div>`).join('');
+}
+function selectParcelFromList(id){
+  setCurrentParcela(id);
+  renderParcelList();
+  document.querySelector('.navbtn[data-tab="hoy"]').click();
+  refreshDiagnosis();
+}
+function deleteParcel(id){
+  if(!confirm('¿Eliminar esta parcela? No se borra su historial guardado.')) return;
+  parcelas=parcelas.filter(p=>p.id!==id);
+  saveParcelas(parcelas);
+  if(currentParcelaId===id) setCurrentParcela(parcelas[0].id);
+  renderParcelList();
+  refreshDiagnosis();
+}
+
+/* ================= CICLO DEL VIÑEDO ================= */
+const SEASON_START=doy(9,1);
+function sdi(d){ return d>=SEASON_START ? d-SEASON_START : d+365-SEASON_START; }
+const STAGES=[
+  {label:"Reposo", doy:doy(8,15), icon:ICONS.leaf},
+  {label:"Brotación", doy:doy(10,1)},
+  {label:"Floración", doy:doy(11,15)},
+  {label:"Cuajado", doy:doy(12,10)},
+  {label:"Envero", doy:doy(1,20)},
+  {label:"Maduración", doy:doy(2,20)},
+  {label:"Cosecha", doy:doy(3,10)}
+];
+function renderStageStrip(){
+  const curDoy=todayDoy(getRefDate());
+  const curSdi=sdi(curDoy);
+  let closestIdx=0, closestDist=Infinity;
+  STAGES.forEach((s,i)=>{ const dist=Math.abs(sdi(s.doy)-curSdi); if(dist<closestDist){closestDist=dist; closestIdx=i;} });
+  document.getElementById('stageStrip').innerHTML=STAGES.map((s,i)=>`
+    <div class="stage-item ${i===closestIdx?'current':''}">
+      <div class="si-dot">${DISEASE_ICON.mildiu}</div>
+      <div class="si-label">${s.label}</div>
+    </div>`).join('');
+}
+
+/* ================= NOTIFICACIONES ================= */
+document.getElementById('notifBtn').addEventListener('click', async ()=>{
+  if(!('Notification' in window)){ alert('Este navegador no soporta notificaciones.'); return; }
+  const perm=await Notification.requestPermission();
+  if(perm==='granted'){ document.getElementById('notifBtn').innerHTML=ICONS.shield+' Alertas activadas'; }
+});
+let lastNotifDay={};
+function maybeNotify(parcela,w,curDoy){
+  if(!('Notification' in window) || Notification.permission!=='granted') return;
+  if(isResearchMode()) return;
+  const today=new Date().toISOString().slice(0,10);
+  if(lastNotifDay[parcela.id]===today) return;
+  const highRisk=DISEASES.filter(d=> isDiseaseInSeason(d,parcela,curDoy) && diseaseScore(d,parcela,w).score>=70);
+  if(highRisk.length>0){
+    lastNotifDay[parcela.id]=today;
+    new Notification('Alerta — Vigía del Viñedo', {
+      body: `${parcela.name}: riesgo alto de ${highRisk.map(d=>d.name).join(' y ')}. Inspeccioná lo antes posible.`,
+      icon: 'icon-192.png'
+    });
+  }
+}
+
+/* ================= INICIO ================= */
+refreshDiagnosis();
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+let deferredPrompt;
+const installBtn=document.getElementById('installBtn');
+window.addEventListener('beforeinstallprompt',(e)=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  installBtn.style.display='flex';
+});
+installBtn.addEventListener('click', async ()=>{
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt=null;
+    installBtn.style.display='none';
+  } else if(isIOS){
+    alert('En iPhone: tocá el ícono de compartir (cuadrado con flecha hacia arriba) y elegí "Añadir a pantalla de inicio".');
+  } else {
+    alert('Tu navegador ya podría tener la app instalada, o buscá la opción "Instalar app" / "Añadir a pantalla de inicio" en el menú (⋮) del navegador.');
+  }
+});
+// Mostrar el botón igual pasados unos segundos por si el evento no dispara en este navegador
+setTimeout(()=>{ if(installBtn.style.display==='none') installBtn.style.display='flex'; }, 2500);
+</script>
+</body>
+</html>
