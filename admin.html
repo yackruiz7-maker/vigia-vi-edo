@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vigía del Viñedo — Panel de Administración</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<style>
+  :root{
+    --bg:#161F17; --card:#212F23; --border:#3A4A3D; --text:#EFE8DA;
+    --muted:#B7AF9E; --dim:#8B9385; --gold:#C9A227; --danger:#E08070; --green:#5AAE73;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:'IBM Plex Sans',sans-serif; min-height:100vh;}
+  .wrap{max-width:720px; margin:0 auto; padding:28px 18px 60px;}
+  h1{font-family:'Fraunces',serif; font-size:24px; margin:0 0 2px;}
+  .sub{color:var(--muted); font-size:13px; margin:0 0 24px;}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px; margin-bottom:16px;}
+  .card h2{font-family:'Fraunces',serif; font-size:16px; margin:0 0 12px;}
+  label{font-size:12px; color:var(--muted); display:block; margin:10px 0 5px;}
+  input, textarea{width:100%; background:#1B2A1E; border:1px solid var(--border); border-radius:8px; padding:10px 11px; color:var(--text); font-size:14px; font-family:inherit;}
+  .btn{margin-top:14px; padding:11px 18px; border-radius:9px; border:none; background:var(--gold); color:#1B2A1E; font-weight:600; font-size:14px; cursor:pointer;}
+  .btn.secondary{background:none; border:1px solid var(--border); color:var(--text);}
+  #loginError{color:var(--danger); font-size:12.5px; margin-top:8px; display:none;}
+  #loginScreen, #adminScreen{display:none;}
+  .topbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;}
+  .stat-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:6px;}
+  .stat{background:#1B2A1E; border:1px solid var(--border); border-radius:10px; padding:14px; text-align:center;}
+  .stat .v{font-family:'IBM Plex Mono',monospace; font-size:22px; color:var(--gold);}
+  .stat .l{font-size:11px; color:var(--dim); margin-top:3px;}
+  .bar-row{margin-bottom:10px;}
+  .bar-label{display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:4px;}
+  .bar-wrap{height:8px; background:#1B2A1E; border-radius:4px; overflow:hidden;}
+  .bar{height:100%; border-radius:4px; background:var(--green);}
+  table{width:100%; border-collapse:collapse; font-size:12.5px; margin-top:6px;}
+  th,td{padding:7px 6px; text-align:left; border-bottom:1px solid var(--border);}
+  th{color:var(--dim); font-size:11px; text-transform:uppercase; font-weight:600;}
+  .announce-item{border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin-bottom:8px; font-size:13px;}
+  .announce-item .a-date{font-size:10.5px; color:var(--green); font-weight:600;}
+  .announce-item b{display:block; margin:2px 0 3px;}
+  .announce-item p{margin:0; color:var(--muted); line-height:1.4;}
+  .del-btn{background:none; border:none; color:var(--danger); font-size:11px; cursor:pointer; margin-top:6px;}
+  .empty{color:var(--dim); font-size:12.5px; padding:10px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="loginScreen">
+    <h1>Vigía del Viñedo</h1>
+    <p class="sub">Panel de administración — acceso restringido</p>
+    <div class="card">
+      <h2>Iniciar sesión</h2>
+      <label>Correo electrónico</label>
+      <input type="email" id="loginEmail" placeholder="tu@correo.com" />
+      <label>Contraseña</label>
+      <input type="password" id="loginPass" />
+      <button class="btn" id="loginBtn">Entrar</button>
+      <p id="loginError"></p>
+    </div>
+  </div>
+
+  <div id="adminScreen">
+    <div class="topbar">
+      <div><h1>Centro de Control</h1><p class="sub" style="margin:0;">Datos agregados de todos los productores</p></div>
+      <button class="btn secondary" id="logoutBtn">Cerrar sesión</button>
+    </div>
+
+    <div class="card">
+      <h2>Resumen</h2>
+      <div class="stat-grid">
+        <div class="stat"><div class="v" id="statViticultores">—</div><div class="l">Productores</div></div>
+        <div class="stat"><div class="v" id="statParcelas">—</div><div class="l">Parcelas</div></div>
+        <div class="stat"><div class="v" id="statFumig">—</div><div class="l">Fumigaciones</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Fumigaciones por enfermedad</h2>
+      <div id="byDisease"></div>
+    </div>
+
+    <div class="card">
+      <h2>Productos más usados</h2>
+      <div id="byProduct"></div>
+    </div>
+
+    <div class="card">
+      <h2>Últimos registros (todos los productores)</h2>
+      <div id="recentTable"></div>
+    </div>
+
+    <div class="card">
+      <h2>Publicar anuncio o capacitación</h2>
+      <label>Título</label>
+      <input type="text" id="annTitle" placeholder="Ej: Taller de manejo de oídio" />
+      <label>Detalle</label>
+      <textarea id="annBody" rows="3" placeholder="Fecha, lugar, hora, cupos..."></textarea>
+      <button class="btn" id="annPublishBtn">Publicar</button>
+    </div>
+
+    <div class="card">
+      <h2>Anuncios publicados</h2>
+      <div id="annList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const firebaseConfig={
+  apiKey:"AIzaSyBvmmOqw4j4Zvi7dEQHiKNMjlQE3ujQYQE",
+  authDomain:"vigia-6f1d6.firebaseapp.com",
+  projectId:"vigia-6f1d6",
+  storageBucket:"vigia-6f1d6.firebasestorage.app",
+  messagingSenderId:"897614323058",
+  appId:"1:897614323058:web:a24302f81e0e0fd65a51eb"
+};
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
+
+auth.onAuthStateChanged(user=>{
+  document.getElementById('loginScreen').style.display = user ? 'none' : 'block';
+  document.getElementById('adminScreen').style.display = user ? 'block' : 'none';
+  if(user) loadAll();
+});
+
+document.getElementById('loginBtn').addEventListener('click', async ()=>{
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  const errEl=document.getElementById('loginError');
+  errEl.style.display='none';
+  try{
+    await auth.signInWithEmailAndPassword(email, pass);
+  }catch(e){
+    errEl.textContent = 'No se pudo iniciar sesión: correo o contraseña incorrectos.';
+    errEl.style.display='block';
+  }
+});
+document.getElementById('logoutBtn').addEventListener('click', ()=> auth.signOut());
+
+const DISEASE_NAMES={mildiu:'Mildiu',oidio:'Oídio',botritis:'Botritis'};
+const DISEASE_COLOR={mildiu:'#7A9A63',oidio:'#C9A227',botritis:'#A4384A'};
+
+async function loadAll(){
+  await loadStats();
+  await loadAnnouncementsAdmin();
+}
+
+async function loadStats(){
+  try{
+    const snap=await db.collection('fumigaciones_compartidas').orderBy('creadoEn','desc').limit(500).get();
+    const docs=snap.docs.map(d=>({id:d.id, ...d.data()}));
+    document.getElementById('statFumig').textContent=docs.length;
+    const viticultores=new Set(), parcelas=new Set(), byDisease={}, byProduct={};
+    docs.forEach(d=>{
+      viticultores.add(d.viticultor||'Anónimo');
+      parcelas.add((d.parcelaNombre||'')+'|'+(d.ubicacion||''));
+      byDisease[d.enfermedad]=(byDisease[d.enfermedad]||0)+1;
+      byProduct[d.producto]=(byProduct[d.producto]||0)+1;
+    });
+    document.getElementById('statViticultores').textContent=viticultores.size;
+    document.getElementById('statParcelas').textContent=parcelas.size;
+
+    const maxD=Math.max(1,...Object.values(byDisease));
+    document.getElementById('byDisease').innerHTML = Object.keys(byDisease).length===0 ? '<p class="empty">Sin datos todavía.</p>' :
+      Object.entries(byDisease).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`
+      <div class="bar-row"><div class="bar-label"><span>${DISEASE_NAMES[k]||k}</span><span>${v}</span></div>
+      <div class="bar-wrap"><div class="bar" style="width:${(v/maxD)*100}%; background:${DISEASE_COLOR[k]||'var(--green)'}"></div></div></div>`).join('');
+
+    const maxP=Math.max(1,...Object.values(byProduct));
+    document.getElementById('byProduct').innerHTML = Object.keys(byProduct).length===0 ? '<p class="empty">Sin datos todavía.</p>' :
+      Object.entries(byProduct).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k,v])=>`
+      <div class="bar-row"><div class="bar-label"><span>${k}</span><span>${v}</span></div>
+      <div class="bar-wrap"><div class="bar" style="width:${(v/maxP)*100}%"></div></div></div>`).join('');
+
+    const rows=docs.slice(0,25).map(d=>`<tr>
+      <td>${d.fecha||''}</td><td>${d.viticultor||'Anónimo'}</td><td>${d.parcelaNombre||''}</td>
+      <td>${DISEASE_NAMES[d.enfermedad]||d.enfermedad}</td><td>${d.producto||''}</td></tr>`).join('');
+    document.getElementById('recentTable').innerHTML = docs.length===0 ? '<p class="empty">Todavía no hay registros de ningún productor.</p>' :
+      `<table><tr><th>Fecha</th><th>Productor</th><th>Parcela</th><th>Enfermedad</th><th>Producto</th></tr>${rows}</table>`;
+  }catch(e){
+    console.error(e);
+    document.getElementById('recentTable').innerHTML='<p class="empty">Error al cargar los datos. Revisá la consola (F12) — probablemente falten las reglas de seguridad de Firestore.</p>';
+  }
+}
+
+document.getElementById('annPublishBtn').addEventListener('click', async ()=>{
+  const titulo=document.getElementById('annTitle').value.trim();
+  const detalle=document.getElementById('annBody').value.trim();
+  if(!titulo||!detalle){ alert('Completá título y detalle.'); return; }
+  try{
+    await db.collection('anuncios').add({
+      titulo, detalle,
+      creadoEn: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    document.getElementById('annTitle').value='';
+    document.getElementById('annBody').value='';
+    loadAnnouncementsAdmin();
+  }catch(e){ alert('No se pudo publicar: '+e.message); }
+});
+
+async function loadAnnouncementsAdmin(){
+  const el=document.getElementById('annList');
+  try{
+    const snap=await db.collection('anuncios').orderBy('creadoEn','desc').limit(20).get();
+    if(snap.empty){ el.innerHTML='<p class="empty">Todavía no publicaste ningún anuncio.</p>'; return; }
+    el.innerHTML=snap.docs.map(doc=>{
+      const a=doc.data();
+      const d=a.creadoEn? a.creadoEn.toDate().toLocaleDateString('es-BO',{day:'numeric',month:'short',year:'numeric'}) : '';
+      return `<div class="announce-item"><span class="a-date">${d}</span><b>${a.titulo}</b><p>${a.detalle}</p>
+        <button class="del-btn" onclick="deleteAnnouncement('${doc.id}')">Eliminar</button></div>`;
+    }).join('');
+  }catch(e){ el.innerHTML='<p class="empty">Error al cargar anuncios.</p>'; }
+}
+async function deleteAnnouncement(id){
+  if(!confirm('¿Eliminar este anuncio?')) return;
+  await db.collection('anuncios').doc(id).delete();
+  loadAnnouncementsAdmin();
+}
+</script>
+</body>
+</html>
