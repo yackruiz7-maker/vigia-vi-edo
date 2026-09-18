@@ -1,0 +1,2009 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#161F17" />
+<title>Vigía del Viñedo — Centro de Control</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+
+<style>
+  :root{
+    --bg:#161F17;
+    --card:#212F23;
+    --card2:#1B2A1E;
+    --border:#3A4A3D;
+    --text:#EFE8DA;
+    --muted:#B7AF9E;
+    --dim:#8B9385;
+    --gold:#C9A227;
+    --green:#5AAE73;
+    --danger:#E08070;
+    --blue:#79A8C7;
+  }
+
+  *{box-sizing:border-box}
+
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Sans',sans-serif;
+    min-height:100vh;
+  }
+
+  .wrap{
+    max-width:1100px;
+    margin:0 auto;
+    padding:28px 18px 70px;
+  }
+
+  h1,h2,h3{
+    font-family:'Fraunces',serif;
+  }
+
+  h1{
+    font-size:27px;
+    margin:0 0 3px;
+  }
+
+  h2{
+    font-size:18px;
+    margin:0 0 15px;
+  }
+
+  .sub{
+    color:var(--muted);
+    font-size:13px;
+    margin:0;
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:18px;
+    margin-bottom:16px;
+  }
+
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:16px;
+    margin-bottom:20px;
+  }
+
+  .top-actions{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+
+  .session{
+    color:var(--dim);
+    font-size:11px;
+  }
+
+  .stat-grid{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:10px;
+  }
+
+  .stat{
+    background:var(--card2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:14px;
+    text-align:center;
+  }
+
+  .stat .v{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:22px;
+    color:var(--gold);
+  }
+
+  .stat .l{
+    font-size:11px;
+    color:var(--dim);
+    margin-top:4px;
+  }
+
+  .grid2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+
+  .grid3{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+  }
+
+  label{
+    font-size:12px;
+    color:var(--muted);
+    display:block;
+    margin:10px 0 5px;
+  }
+
+  input,textarea,select{
+    width:100%;
+    background:var(--card2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:10px 11px;
+    color:var(--text);
+    font-size:13px;
+    font-family:inherit;
+    outline:none;
+  }
+
+  input:focus,textarea:focus,select:focus{
+    border-color:var(--gold);
+  }
+
+  .btn{
+    margin-top:14px;
+    padding:10px 16px;
+    border-radius:9px;
+    border:none;
+    background:var(--gold);
+    color:#1B2A1E;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+  }
+
+  .btn.secondary{
+    background:none;
+    border:1px solid var(--border);
+    color:var(--text);
+  }
+
+  .btn.danger{
+    background:none;
+    border:1px solid #5A3A36;
+    color:var(--danger);
+  }
+
+  .btn.small{
+    margin-top:0;
+    padding:7px 10px;
+    font-size:11px;
+  }
+
+  .status{
+    min-height:18px;
+    color:var(--green);
+    font-size:12px;
+    margin-top:8px;
+  }
+
+  .error{
+    color:var(--danger);
+  }
+
+  #loginScreen,#adminScreen{
+    display:none;
+  }
+
+  .bar-row{
+    margin-bottom:12px;
+  }
+
+  .bar-label{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    font-size:12px;
+    margin-bottom:5px;
+  }
+
+  .bar-wrap{
+    height:8px;
+    background:var(--card2);
+    border-radius:4px;
+    overflow:hidden;
+  }
+
+  .bar{
+    height:100%;
+    border-radius:4px;
+    background:var(--green);
+  }
+
+  .table-wrap{
+    overflow:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:12px;
+    min-width:650px;
+  }
+
+  th,td{
+    padding:8px 7px;
+    text-align:left;
+    border-bottom:1px solid var(--border);
+    vertical-align:top;
+  }
+
+  th{
+    color:var(--dim);
+    font-size:10.5px;
+    text-transform:uppercase;
+    font-weight:600;
+    white-space:nowrap;
+  }
+
+  td{
+    color:var(--muted);
+  }
+
+  td strong{
+    color:var(--text);
+    font-weight:500;
+  }
+
+  .pill{
+    display:inline-block;
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:3px 7px;
+    font-size:10px;
+    color:var(--muted);
+    white-space:nowrap;
+  }
+
+  .pill.green{
+    color:var(--green);
+    border-color:#35563F;
+  }
+
+  .pill.gold{
+    color:var(--gold);
+    border-color:#5D5026;
+  }
+
+  .pill.blue{
+    color:var(--blue);
+    border-color:#3E5667;
+  }
+
+  .empty{
+    color:var(--dim);
+    font-size:12.5px;
+    padding:10px 0;
+  }
+
+  .loading{
+    color:var(--dim);
+    font-size:12px;
+  }
+
+  .announce-item{
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:11px 12px;
+    margin-bottom:8px;
+  }
+
+  .announce-item .a-date{
+    font-size:10px;
+    color:var(--green);
+    font-weight:600;
+  }
+
+  .announce-item b{
+    display:block;
+    margin:3px 0 4px;
+    color:var(--text);
+  }
+
+  .announce-item p{
+    margin:0;
+    color:var(--muted);
+    line-height:1.45;
+    white-space:pre-wrap;
+  }
+
+  .filters{
+    display:grid;
+    grid-template-columns:1.2fr 1fr 1fr 1fr auto;
+    gap:9px;
+    align-items:end;
+  }
+
+  .filters label{
+    margin-top:0;
+  }
+
+  .filter-actions{
+    display:flex;
+    gap:7px;
+  }
+
+  .section-note{
+    color:var(--dim);
+    font-size:11px;
+    line-height:1.45;
+    margin:-6px 0 13px;
+  }
+
+  .two-stat{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+
+  .mini{
+    background:var(--card2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:11px;
+  }
+
+  .mini .v{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:18px;
+    color:var(--gold);
+  }
+
+  .mini .l{
+    color:var(--dim);
+    font-size:10.5px;
+    margin-top:2px;
+  }
+
+  #loginError{
+    color:var(--danger);
+    font-size:12.5px;
+    margin-top:8px;
+    display:none;
+  }
+
+  .muted{
+    color:var(--dim);
+  }
+
+  .nowrap{
+    white-space:nowrap;
+  }
+
+  @media(max-width:850px){
+    .stat-grid{grid-template-columns:repeat(3,1fr)}
+    .filters{grid-template-columns:1fr 1fr}
+    .filter-actions{grid-column:1/-1}
+  }
+
+  @media(max-width:600px){
+    .wrap{padding:20px 12px 50px}
+    h1{font-size:23px}
+    .topbar{align-items:flex-start; flex-direction:column}
+    .stat-grid{grid-template-columns:repeat(2,1fr)}
+    .grid2,.grid3{grid-template-columns:1fr}
+    .filters{grid-template-columns:1fr}
+    .filter-actions{grid-column:auto}
+    .card{padding:14px}
+  }
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <!-- LOGIN -->
+  <div id="loginScreen">
+    <h1>Vigía del Viñedo</h1>
+    <p class="sub">Centro de Control — acceso restringido</p>
+
+    <div class="card" style="max-width:430px;margin-top:24px;">
+      <h2>Iniciar sesión</h2>
+
+      <label for="loginEmail">Correo electrónico</label>
+      <input type="email" id="loginEmail" placeholder="tu@correo.com" autocomplete="username">
+
+      <label for="loginPass">Contraseña</label>
+      <input type="password" id="loginPass" autocomplete="current-password">
+
+      <button class="btn" id="loginBtn">Entrar</button>
+      <p id="loginError"></p>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="adminScreen">
+
+    <div class="topbar">
+      <div>
+        <h1>Centro de Control</h1>
+        <p class="sub">Vigía del Viñedo · monitoreo de productores, parcelas, clima y tratamientos</p>
+      </div>
+
+      <div class="top-actions">
+        <span class="session" id="sessionEmail"></span>
+        <button class="btn secondary" id="refreshBtn">Actualizar</button>
+        <button class="btn secondary" id="logoutBtn">Cerrar sesión</button>
+      </div>
+    </div>
+
+    <!-- RESUMEN -->
+    <div class="card">
+      <h2>Resumen general</h2>
+
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="v" id="statViticultores">—</div>
+          <div class="l">Productores</div>
+        </div>
+
+        <div class="stat">
+          <div class="v" id="statParcelas">—</div>
+          <div class="l">Parcelas</div>
+        </div>
+
+        <div class="stat">
+          <div class="v" id="statSuperficie">—</div>
+          <div class="l">Hectáreas</div>
+        </div>
+
+        <div class="stat">
+          <div class="v" id="statFumig">—</div>
+          <div class="l">Tratamientos</div>
+        </div>
+
+        <div class="stat">
+          <div class="v" id="statLecturas">—</div>
+          <div class="l">Lecturas climáticas</div>
+        </div>
+      </div>
+
+      <div class="status" id="globalStatus"></div>
+    </div>
+
+    <!-- ANALISIS -->
+    <div class="grid2">
+
+      <div class="card">
+        <h2>Tratamientos por enfermedad</h2>
+        <div id="byDisease"><p class="loading">Cargando…</p></div>
+      </div>
+
+      <div class="card">
+        <h2>Productos más utilizados</h2>
+        <div id="byProduct"><p class="loading">Cargando…</p></div>
+      </div>
+
+    </div>
+
+    <!-- FILTROS -->
+    <div class="card">
+      <h2>Explorar datos</h2>
+      <p class="section-note">
+        Los filtros permiten revisar la información recopilada sin modificar los registros de los productores.
+      </p>
+
+      <div class="filters">
+        <div>
+          <label for="filterText">Buscar productor/parcela</label>
+          <input id="filterText" type="text" placeholder="Nombre o ubicación">
+        </div>
+
+        <div>
+          <label for="filterDisease">Enfermedad</label>
+          <select id="filterDisease">
+            <option value="">Todas</option>
+            <option value="mildiu">Mildiu</option>
+            <option value="oidio">Oídio</option>
+            <option value="botritis">Botritis</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="filterVariety">Variedad</label>
+          <select id="filterVariety">
+            <option value="">Todas</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="filterFrom">Desde</label>
+          <input id="filterFrom" type="date">
+        </div>
+
+        <div>
+          <label for="filterTo">Hasta</label>
+          <input id="filterTo" type="date">
+        </div>
+
+        <div class="filter-actions">
+          <button class="btn" id="applyFilters">Aplicar</button>
+          <button class="btn secondary" id="clearFilters">Limpiar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PARCELAS -->
+    <div class="card">
+      <h2>Parcelas registradas</h2>
+      <p class="section-note">
+        Esta tabla utiliza la información sincronizada desde los dispositivos de los productores.
+        Si una parcela fue creada antes de la sincronización, puede no aparecer aquí hasta que el productor vuelva a abrir la aplicación.
+      </p>
+      <div id="parcelTable"><p class="loading">Cargando…</p></div>
+    </div>
+
+    <!-- TRATAMIENTOS -->
+    <div class="card">
+      <h2>Últimos tratamientos registrados</h2>
+      <div id="recentTreatments"><p class="loading">Cargando…</p></div>
+    </div>
+
+    <!-- LECTURAS -->
+    <div class="card">
+      <h2>Últimas lecturas climáticas y riesgo</h2>
+      <p class="section-note">
+        Estas lecturas permiten construir posteriormente el historial epidemiológico por parcela y zona.
+      </p>
+      <div id="recentReadings"><p class="loading">Cargando…</p></div>
+    </div>
+
+    <!-- ANUNCIOS -->
+    <div class="grid2">
+
+      <div class="card">
+        <h2>Publicar anuncio o capacitación</h2>
+
+        <label for="annTitle">Título</label>
+        <input type="text" id="annTitle" placeholder="Ej.: Taller de manejo de oídio">
+
+        <label for="annBody">Detalle</label>
+        <textarea id="annBody" rows="5" placeholder="Fecha, lugar, hora, cupos, recomendaciones…"></textarea>
+
+        <button class="btn" id="annPublishBtn">Publicar</button>
+        <div class="status" id="annStatus"></div>
+      </div>
+
+      <div class="card">
+        <h2>Anuncios publicados</h2>
+        <div id="annList"><p class="loading">Cargando…</p></div>
+      </div>
+
+    </div>
+
+    <!-- INFORMACIÓN TÉCNICA -->
+    <div class="card">
+      <h2>Estado del sistema</h2>
+
+      <div class="two-stat">
+        <div class="mini">
+          <div class="v" id="statUsersCloud">—</div>
+          <div class="l">Productores con registros en la nube</div>
+        </div>
+
+        <div class="mini">
+          <div class="v" id="statUidRecords">—</div>
+          <div class="l">Registros que contienen UID</div>
+        </div>
+      </div>
+
+      <p class="section-note" style="margin-top:13px;margin-bottom:0;">
+        El UID es la identidad técnica de Firebase y debe ser la referencia principal del productor.
+        El nombre visible puede cambiar; el UID no debería utilizarse como nombre público.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   FIREBASE
+   ========================================================= */
+
+const firebaseConfig = {
+  apiKey:"AIzaSyBvmmOqw4j4Zvi7dEQHiKNMjlQE3ujQYQE",
+  authDomain:"vigia-6f1d6.firebaseapp.com",
+  projectId:"vigia-6f1d6",
+  storageBucket:"vigia-6f1d6.firebasestorage.app",
+  messagingSenderId:"897614323058",
+  appId:"1:897614323058:web:a24302f81e0e0fd65a51eb"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+/* =========================================================
+   ESTADO
+   ========================================================= */
+
+const DISEASE_NAMES = {
+  mildiu:"Mildiu",
+  oidio:"Oídio",
+  botritis:"Botritis"
+};
+
+let DATA = {
+  treatments:[],
+  readings:[],
+  parcels:[],
+  users:[],
+  announcements:[]
+};
+
+let FILTERED_TREATMENTS = [];
+
+/* =========================================================
+   SEGURIDAD DE RENDERIZADO
+   ========================================================= */
+
+function esc(value){
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+function safeDate(value){
+  if(!value) return "";
+
+  try{
+    if(typeof value.toDate === "function"){
+      return value.toDate().toLocaleDateString("es-BO",{
+        day:"2-digit",
+        month:"2-digit",
+        year:"numeric"
+      });
+    }
+
+    const d = new Date(value);
+
+    if(Number.isNaN(d.getTime())) return esc(value);
+
+    return d.toLocaleDateString("es-BO",{
+      day:"2-digit",
+      month:"2-digit",
+      year:"numeric"
+    });
+  }catch(e){
+    return esc(value);
+  }
+}
+
+function toDateInput(value){
+  if(!value) return "";
+
+  try{
+    if(typeof value.toDate === "function"){
+      return value.toDate().toISOString().slice(0,10);
+    }
+
+    const d = new Date(value);
+    if(Number.isNaN(d.getTime())) return "";
+
+    return d.toISOString().slice(0,10);
+  }catch(e){
+    return "";
+  }
+}
+
+function numeric(value){
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/* =========================================================
+   LOGIN
+   ========================================================= */
+
+auth.onAuthStateChanged(async user => {
+
+  const loginScreen = document.getElementById("loginScreen");
+  const adminScreen = document.getElementById("adminScreen");
+
+  if(user){
+    loginScreen.style.display = "none";
+    adminScreen.style.display = "block";
+
+    document.getElementById("sessionEmail").textContent =
+      user.email || "";
+
+    await loadAll();
+
+  }else{
+    loginScreen.style.display = "block";
+    adminScreen.style.display = "none";
+  }
+});
+
+document.getElementById("loginBtn").addEventListener("click",login);
+
+document.getElementById("loginPass").addEventListener("keydown",e=>{
+  if(e.key === "Enter") login();
+});
+
+async function login(){
+
+  const email =
+    document.getElementById("loginEmail").value.trim();
+
+  const pass =
+    document.getElementById("loginPass").value;
+
+  const err =
+    document.getElementById("loginError");
+
+  err.style.display = "none";
+
+  if(!email || !pass){
+    err.textContent = "Ingresá correo y contraseña.";
+    err.style.display = "block";
+    return;
+  }
+
+  try{
+
+    await auth.signInWithEmailAndPassword(email,pass);
+
+  }catch(e){
+
+    console.error(e);
+
+    err.textContent =
+      "No se pudo iniciar sesión. Verificá las credenciales.";
+
+    err.style.display = "block";
+  }
+}
+
+document.getElementById("logoutBtn")
+  .addEventListener("click",()=>auth.signOut());
+
+document.getElementById("refreshBtn")
+  .addEventListener("click",()=>loadAll());
+
+/* =========================================================
+   CARGA PRINCIPAL
+   ========================================================= */
+
+async function loadAll(){
+
+  setGlobalStatus("Actualizando datos…");
+
+  try{
+
+    await Promise.all([
+      loadTreatments(),
+      loadReadings(),
+      loadParcels(),
+      loadUsers(),
+      loadAnnouncements()
+    ]);
+
+    populateVarietyFilter();
+
+    renderSummary();
+    renderDiseaseChart();
+    renderProductChart();
+    applyFilters();
+    renderParcels();
+    renderReadings();
+    renderAnnouncements();
+    renderSystemStatus();
+
+    setGlobalStatus(
+      "Datos actualizados: " +
+      new Date().toLocaleTimeString("es-BO")
+    );
+
+  }catch(e){
+
+    console.error(e);
+
+    setGlobalStatus(
+      "No se pudieron cargar todos los datos. Revisá la consola (F12).",
+      true
+    );
+  }
+}
+
+/* =========================================================
+   TRATAMIENTOS
+   ========================================================= */
+
+async function loadTreatments(){
+
+  try{
+
+    const snap =
+      await db.collection("fumigaciones_compartidas")
+      .orderBy("creadoEn","desc")
+      .limit(1000)
+      .get();
+
+    DATA.treatments =
+      snap.docs.map(doc=>({
+        id:doc.id,
+        ...doc.data()
+      }));
+
+  }catch(e){
+
+    console.error("Tratamientos:",e);
+
+    /*
+      Fallback para instalaciones donde todavía existen
+      registros sin creadoEn o donde el índice no está listo.
+    */
+
+    try{
+
+      const snap =
+        await db.collection("fumigaciones_compartidas")
+        .limit(1000)
+        .get();
+
+      DATA.treatments =
+        snap.docs.map(doc=>({
+          id:doc.id,
+          ...doc.data()
+        }));
+
+    }catch(e2){
+
+      console.error("Tratamientos fallback:",e2);
+      DATA.treatments = [];
+    }
+  }
+}
+
+/* =========================================================
+   LECTURAS
+   ========================================================= */
+
+async function loadReadings(){
+
+  try{
+
+    const snap =
+      await db.collection("lecturas_diarias")
+      .orderBy("creadoEn","desc")
+      .limit(1000)
+      .get();
+
+    DATA.readings =
+      snap.docs.map(doc=>({
+        id:doc.id,
+        ...doc.data()
+      }));
+
+  }catch(e){
+
+    console.error("Lecturas:",e);
+
+    try{
+
+      const snap =
+        await db.collection("lecturas_diarias")
+        .limit(1000)
+        .get();
+
+      DATA.readings =
+        snap.docs.map(doc=>({
+          id:doc.id,
+          ...doc.data()
+        }));
+
+    }catch(e2){
+
+      console.error("Lecturas fallback:",e2);
+      DATA.readings = [];
+    }
+  }
+}
+
+/* =========================================================
+   PARCELAS
+   ========================================================= */
+
+async function loadParcels(){
+
+  const parcels = [];
+  const seen = new Set();
+
+  /*
+    Nueva estructura recomendada:
+    usuarios/{uid}/parcelas/{parcelId}
+  */
+
+  try{
+
+    const usersSnap =
+      await db.collection("usuarios").get();
+
+    for(const userDoc of usersSnap.docs){
+
+      const uid = userDoc.id;
+
+      try{
+
+        const pSnap =
+          await db.collection("usuarios")
+          .doc(uid)
+          .collection("parcelas")
+          .get();
+
+        pSnap.docs.forEach(doc=>{
+
+          const data = doc.data();
+
+          const key =
+            uid + "|" + doc.id;
+
+          if(seen.has(key)) return;
+
+          seen.add(key);
+
+          parcels.push({
+            id:doc.id,
+            uid,
+            ...data
+          });
+        });
+
+      }catch(e){
+        console.warn(
+          "No se pudieron leer parcelas de",
+          uid,
+          e
+        );
+      }
+    }
+
+  }catch(e){
+
+    console.warn(
+      "No se pudo consultar usuarios/{uid}/parcelas:",
+      e
+    );
+  }
+
+  /*
+    Fallback opcional para instalaciones donde las parcelas
+    se almacenan en una colección global.
+  */
+
+  try{
+
+    const globalSnap =
+      await db.collection("parcelas")
+      .limit(1000)
+      .get();
+
+    globalSnap.docs.forEach(doc=>{
+
+      const data = doc.data();
+
+      const key =
+        (data.uid || data.viticultorUid || "") +
+        "|" +
+        doc.id;
+
+      if(seen.has(key)) return;
+
+      seen.add(key);
+
+      parcels.push({
+        id:doc.id,
+        ...data
+      });
+    });
+
+  }catch(e){
+
+    console.warn(
+      "Colección global parcelas no disponible:",
+      e
+    );
+  }
+
+  DATA.parcels = parcels;
+}
+
+/* =========================================================
+   USUARIOS
+   ========================================================= */
+
+async function loadUsers(){
+
+  try{
+
+    const snap =
+      await db.collection("usuarios").get();
+
+    DATA.users =
+      snap.docs.map(doc=>({
+        uid:doc.id,
+        ...doc.data()
+      }));
+
+  }catch(e){
+
+    console.warn("Usuarios:",e);
+    DATA.users = [];
+  }
+}
+
+/* =========================================================
+   ANUNCIOS
+   ========================================================= */
+
+async function loadAnnouncements(){
+
+  try{
+
+    const snap =
+      await db.collection("anuncios")
+      .orderBy("creadoEn","desc")
+      .limit(30)
+      .get();
+
+    DATA.announcements =
+      snap.docs.map(doc=>({
+        id:doc.id,
+        ...doc.data()
+      }));
+
+  }catch(e){
+
+    console.error("Anuncios:",e);
+
+    try{
+
+      const snap =
+        await db.collection("anuncios")
+        .limit(30)
+        .get();
+
+      DATA.announcements =
+        snap.docs.map(doc=>({
+          id:doc.id,
+          ...doc.data()
+        }));
+
+    }catch(e2){
+
+      console.error("Anuncios fallback:",e2);
+      DATA.announcements = [];
+    }
+  }
+}
+
+/* =========================================================
+   RESUMEN
+   ========================================================= */
+
+function renderSummary(){
+
+  const producerIds = new Set();
+
+  DATA.treatments.forEach(d=>{
+    if(d.uid) producerIds.add(d.uid);
+    else if(d.viticultor) producerIds.add("name:"+d.viticultor);
+  });
+
+  DATA.readings.forEach(d=>{
+    if(d.uid) producerIds.add(d.uid);
+    else if(d.viticultor) producerIds.add("name:"+d.viticultor);
+  });
+
+  DATA.parcels.forEach(d=>{
+    if(d.uid) producerIds.add(d.uid);
+  });
+
+  /*
+    Primero contamos usuarios registrados en usuarios/.
+    Si no existen, usamos productores encontrados en registros.
+  */
+
+  const producerCount =
+    DATA.users.length ||
+    producerIds.size;
+
+  document.getElementById("statViticultores")
+    .textContent = producerCount;
+
+  document.getElementById("statParcelas")
+    .textContent = DATA.parcels.length;
+
+  const hectares =
+    DATA.parcels.reduce((sum,p)=>{
+      return sum +
+        numeric(
+          p.superficieHa ??
+          p.hectareas ??
+          p.areaHa ??
+          p.superficie
+        );
+    },0);
+
+  document.getElementById("statSuperficie")
+    .textContent =
+      hectares > 0
+      ? hectares.toFixed(2)
+      : "0";
+
+  document.getElementById("statFumig")
+    .textContent = DATA.treatments.length;
+
+  document.getElementById("statLecturas")
+    .textContent = DATA.readings.length;
+}
+
+/* =========================================================
+   ENFERMEDADES
+   ========================================================= */
+
+function renderDiseaseChart(){
+
+  const counts = {};
+
+  DATA.treatments.forEach(d=>{
+
+    const key =
+      d.enfermedad ||
+      d.disease ||
+      "sin especificar";
+
+    counts[key] =
+      (counts[key] || 0) + 1;
+  });
+
+  const entries =
+    Object.entries(counts)
+    .sort((a,b)=>b[1]-a[1]);
+
+  const el =
+    document.getElementById("byDisease");
+
+  if(!entries.length){
+    el.innerHTML =
+      '<p class="empty">Sin datos todavía.</p>';
+    return;
+  }
+
+  const max =
+    Math.max(...entries.map(x=>x[1]),1);
+
+  el.innerHTML =
+    entries.map(([key,value])=>{
+
+      const width =
+        Math.max(4,(value/max)*100);
+
+      return `
+        <div class="bar-row">
+          <div class="bar-label">
+            <span>${esc(DISEASE_NAMES[key] || key)}</span>
+            <span>${value}</span>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar" style="width:${width}%"></div>
+          </div>
+        </div>
+      `;
+
+    }).join("");
+}
+
+/* =========================================================
+   PRODUCTOS
+   ========================================================= */
+
+function renderProductChart(){
+
+  const counts = {};
+
+  DATA.treatments.forEach(d=>{
+
+    const product =
+      (d.producto ||
+       d.product ||
+       "Sin especificar").trim();
+
+    counts[product] =
+      (counts[product] || 0) + 1;
+  });
+
+  const entries =
+    Object.entries(counts)
+    .sort((a,b)=>b[1]-a[1])
+    .slice(0,10);
+
+  const el =
+    document.getElementById("byProduct");
+
+  if(!entries.length){
+    el.innerHTML =
+      '<p class="empty">Sin datos todavía.</p>';
+    return;
+  }
+
+  const max =
+    Math.max(...entries.map(x=>x[1]),1);
+
+  el.innerHTML =
+    entries.map(([key,value])=>{
+
+      const width =
+        Math.max(4,(value/max)*100);
+
+      return `
+        <div class="bar-row">
+          <div class="bar-label">
+            <span>${esc(key)}</span>
+            <span>${value}</span>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar" style="width:${width}%"></div>
+          </div>
+        </div>
+      `;
+
+    }).join("");
+}
+
+/* =========================================================
+   FILTROS
+   ========================================================= */
+
+function populateVarietyFilter(){
+
+  const select =
+    document.getElementById("filterVariety");
+
+  const values = new Set();
+
+  DATA.parcels.forEach(p=>{
+    if(p.variety) values.add(p.variety);
+  });
+
+  DATA.treatments.forEach(t=>{
+    if(t.variedad) values.add(t.variedad);
+    if(t.variety) values.add(t.variety);
+  });
+
+  const current = select.value;
+
+  select.innerHTML =
+    '<option value="">Todas</option>' +
+    [...values]
+    .sort((a,b)=>String(a).localeCompare(String(b),"es"))
+    .map(v=>`<option value="${esc(v)}">${esc(v)}</option>`)
+    .join("");
+
+  if([...values].includes(current)){
+    select.value = current;
+  }
+}
+
+document.getElementById("applyFilters")
+  .addEventListener("click",applyFilters);
+
+document.getElementById("clearFilters")
+  .addEventListener("click",()=>{
+
+    document.getElementById("filterText").value="";
+    document.getElementById("filterDisease").value="";
+    document.getElementById("filterVariety").value="";
+    document.getElementById("filterFrom").value="";
+    document.getElementById("filterTo").value="";
+
+    applyFilters();
+  });
+
+function applyFilters(){
+
+  const text =
+    document.getElementById("filterText")
+    .value.trim()
+    .toLowerCase();
+
+  const disease =
+    document.getElementById("filterDisease").value;
+
+  const variety =
+    document.getElementById("filterVariety").value;
+
+  const from =
+    document.getElementById("filterFrom").value;
+
+  const to =
+    document.getElementById("filterTo").value;
+
+  FILTERED_TREATMENTS =
+    DATA.treatments.filter(d=>{
+
+      const producer =
+        String(
+          d.viticultor ||
+          d.productor ||
+          d.nombreProductor ||
+          ""
+        ).toLowerCase();
+
+      const parcel =
+        String(
+          d.parcelaNombre ||
+          d.parcela ||
+          ""
+        ).toLowerCase();
+
+      const location =
+        String(
+          d.ubicacion ||
+          d.locName ||
+          ""
+        ).toLowerCase();
+
+      const matchesText =
+        !text ||
+        producer.includes(text) ||
+        parcel.includes(text) ||
+        location.includes(text);
+
+      const dDisease =
+        d.enfermedad || d.disease || "";
+
+      const matchesDisease =
+        !disease ||
+        dDisease === disease;
+
+      const dVariety =
+        d.variedad || d.variety || "";
+
+      const matchesVariety =
+        !variety ||
+        dVariety === variety;
+
+      const date =
+        d.fecha ||
+        toDateInput(d.creadoEn);
+
+      const matchesFrom =
+        !from || date >= from;
+
+      const matchesTo =
+        !to || date <= to;
+
+      return (
+        matchesText &&
+        matchesDisease &&
+        matchesVariety &&
+        matchesFrom &&
+        matchesTo
+      );
+    });
+
+  renderTreatments(FILTERED_TREATMENTS);
+}
+
+/* =========================================================
+   TABLA DE PARCELAS
+   ========================================================= */
+
+function renderParcels(){
+
+  const el =
+    document.getElementById("parcelTable");
+
+  if(!DATA.parcels.length){
+
+    el.innerHTML =
+      '<p class="empty">No hay parcelas sincronizadas todavía.</p>';
+
+    return;
+  }
+
+  const rows =
+    DATA.parcels
+    .slice()
+    .sort((a,b)=>
+      String(a.name || a.nombre || "")
+      .localeCompare(
+        String(b.name || b.nombre || ""),
+        "es"
+      )
+    )
+    .map(p=>{
+
+      const name =
+        p.name ||
+        p.nombre ||
+        "Sin nombre";
+
+      const variety =
+        p.variety ||
+        p.variedad ||
+        "—";
+
+      const location =
+        p.locName ||
+        p.ubicacion ||
+        p.localidad ||
+        "—";
+
+      const surface =
+        numeric(
+          p.superficieHa ??
+          p.hectareas ??
+          p.areaHa ??
+          p.superficie
+        );
+
+      const lat =
+        p.lat ?? p.latitude ?? "";
+
+      const lon =
+        p.lon ?? p.longitude ?? "";
+
+      const stage =
+        p.pheno ||
+        p.phenology ||
+        p.etapaFenologica ||
+        "—";
+
+      const orientation =
+        p.orientation ||
+        p.orientacion ||
+        "—";
+
+      return `
+        <tr>
+          <td>
+            <strong>${esc(name)}</strong><br>
+            <span class="muted">${esc(location)}</span>
+          </td>
+
+          <td>${esc(variety)}</td>
+
+          <td class="nowrap">
+            ${surface > 0 ? surface.toFixed(2)+" ha" : "—"}
+          </td>
+
+          <td>${esc(orientation)}</td>
+
+          <td>${esc(stage)}</td>
+
+          <td>
+            ${
+              lat !== "" && lon !== ""
+              ? `<span class="pill blue">${esc(lat)}, ${esc(lon)}</span>`
+              : '<span class="pill">Sin coordenadas</span>'
+            }
+          </td>
+
+          <td>
+            ${
+              p.uid
+              ? `<span class="pill green">UID</span>`
+              : `<span class="pill">Sin UID</span>`
+            }
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  el.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Parcela</th>
+            <th>Variedad</th>
+            <th>Superficie</th>
+            <th>Orientación</th>
+            <th>Fenología</th>
+            <th>Ubicación</th>
+            <th>Identidad</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* =========================================================
+   TABLA DE TRATAMIENTOS
+   ========================================================= */
+
+function renderTreatments(list){
+
+  const el =
+    document.getElementById("recentTreatments");
+
+  if(!list.length){
+
+    el.innerHTML =
+      '<p class="empty">No hay registros que coincidan con los filtros.</p>';
+
+    return;
+  }
+
+  const rows =
+    list
+    .slice()
+    .sort((a,b)=>{
+      const da =
+        a.fecha || toDateInput(a.creadoEn) || "";
+      const dbb =
+        b.fecha || toDateInput(b.creadoEn) || "";
+      return dbb.localeCompare(da);
+    })
+    .slice(0,100)
+    .map(d=>{
+
+      const disease =
+        d.enfermedad ||
+        d.disease ||
+        "—";
+
+      const type =
+        d.tipoTratamiento ||
+        d.type ||
+        "—";
+
+      const product =
+        d.producto ||
+        d.product ||
+        "—";
+
+      const producer =
+        d.viticultor ||
+        d.productor ||
+        "Anónimo";
+
+      const parcel =
+        d.parcelaNombre ||
+        d.parcela ||
+        "—";
+
+      const variety =
+        d.variedad ||
+        d.variety ||
+        "—";
+
+      const date =
+        d.fecha ||
+        toDateInput(d.creadoEn) ||
+        "—";
+
+      return `
+        <tr>
+          <td class="nowrap">${esc(date)}</td>
+
+          <td>
+            <strong>${esc(producer)}</strong>
+            ${
+              d.uid
+              ? `<br><span class="pill green">UID</span>`
+              : ""
+            }
+          </td>
+
+          <td>
+            <strong>${esc(parcel)}</strong><br>
+            <span class="muted">${esc(variety)}</span>
+          </td>
+
+          <td>
+            <span class="pill gold">
+              ${esc(DISEASE_NAMES[disease] || disease)}
+            </span>
+          </td>
+
+          <td>${esc(type)}</td>
+
+          <td>${esc(product)}</td>
+
+          <td>${esc(d.notas || d.notes || "—")}</td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  el.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Productor</th>
+            <th>Parcela</th>
+            <th>Enfermedad</th>
+            <th>Tipo</th>
+            <th>Producto</th>
+            <th>Notas</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* =========================================================
+   LECTURAS CLIMÁTICAS
+   ========================================================= */
+
+function renderReadings(){
+
+  const el =
+    document.getElementById("recentReadings");
+
+  if(!DATA.readings.length){
+
+    el.innerHTML =
+      '<p class="empty">No hay lecturas sincronizadas todavía.</p>';
+
+    return;
+  }
+
+  const rows =
+    DATA.readings
+    .slice()
+    .sort((a,b)=>{
+      const da =
+        a.fecha || toDateInput(a.creadoEn) || "";
+      const dbb =
+        b.fecha || toDateInput(b.creadoEn) || "";
+      return dbb.localeCompare(da);
+    })
+    .slice(0,100)
+    .map(d=>{
+
+      const climate =
+        d.clima || {};
+
+      const temp =
+        d.temp ??
+        d.temperatura ??
+        climate.temp ??
+        "—";
+
+      const humidity =
+        d.humedad ??
+        d.humidity ??
+        climate.humedad ??
+        climate.humidity ??
+        "—";
+
+      const rain =
+        d.lluvia24h ??
+        d.rain24h ??
+        climate.lluvia24h ??
+        climate.rain24h ??
+        "—";
+
+      const risks =
+        d.riesgos || {};
+
+      const riskText =
+        Object.entries(risks)
+        .map(([key,value])=>{
+          if(value === null || value === undefined)
+            return null;
+
+          return (
+            (DISEASE_NAMES[key] || key) +
+            ": " +
+            Number(value).toFixed(0)
+          );
+        })
+        .filter(Boolean)
+        .join(" · ");
+
+      return `
+        <tr>
+          <td class="nowrap">
+            ${esc(d.fecha || toDateInput(d.creadoEn) || "—")}
+          </td>
+
+          <td>
+            <strong>${esc(d.viticultor || "Anónimo")}</strong>
+          </td>
+
+          <td>
+            <strong>${esc(d.parcelaNombre || "—")}</strong><br>
+            <span class="muted">
+              ${esc(d.ubicacion || "")}
+            </span>
+          </td>
+
+          <td>${esc(temp)} °C</td>
+
+          <td>${esc(humidity)} %</td>
+
+          <td>${esc(rain)} mm</td>
+
+          <td>
+            ${
+              riskText
+              ? `<span class="pill blue">${esc(riskText)}</span>`
+              : "—"
+            }
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  el.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Productor</th>
+            <th>Parcela</th>
+            <th>Temp.</th>
+            <th>HR</th>
+            <th>Lluvia 24 h</th>
+            <th>Riesgo</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* =========================================================
+   ANUNCIOS
+   ========================================================= */
+
+document.getElementById("annPublishBtn")
+  .addEventListener("click",publishAnnouncement);
+
+async function publishAnnouncement(){
+
+  const title =
+    document.getElementById("annTitle")
+    .value.trim();
+
+  const body =
+    document.getElementById("annBody")
+    .value.trim();
+
+  const status =
+    document.getElementById("annStatus");
+
+  status.className = "status";
+
+  if(!title || !body){
+
+    status.textContent =
+      "Completá título y detalle.";
+
+    status.classList.add("error");
+
+    return;
+  }
+
+  const user = auth.currentUser;
+
+  if(!user){
+    status.textContent =
+      "La sesión ya no está activa.";
+    status.classList.add("error");
+    return;
+  }
+
+  try{
+
+    await db.collection("anuncios").add({
+
+      titulo:title,
+      detalle:body,
+
+      autorUid:user.uid,
+      autorEmail:user.email || "",
+
+      creadoEn:
+        firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    document.getElementById("annTitle").value="";
+    document.getElementById("annBody").value="";
+
+    status.textContent =
+      "Anuncio publicado correctamente.";
+
+    await loadAnnouncements();
+    renderAnnouncements();
+
+  }catch(e){
+
+    console.error(e);
+
+    status.textContent =
+      "No se pudo publicar el anuncio.";
+
+    status.classList.add("error");
+  }
+}
+
+function renderAnnouncements(){
+
+  const el =
+    document.getElementById("annList");
+
+  if(!DATA.announcements.length){
+
+    el.innerHTML =
+      '<p class="empty">Todavía no hay anuncios publicados.</p>';
+
+    return;
+  }
+
+  el.innerHTML =
+    DATA.announcements.map(a=>{
+
+      const date =
+        a.creadoEn
+        ? safeDate(a.creadoEn)
+        : "";
+
+      return `
+        <div class="announce-item">
+
+          <span class="a-date">
+            ${esc(date)}
+          </span>
+
+          <b>${esc(a.titulo || "Sin título")}</b>
+
+          <p>${esc(a.detalle || "")}</p>
+
+          <button
+            class="btn danger small"
+            data-delete-announcement="${esc(a.id)}">
+            Eliminar
+          </button>
+
+        </div>
+      `;
+    }).join("");
+
+  el.querySelectorAll(
+    "[data-delete-announcement]"
+  ).forEach(btn=>{
+
+    btn.addEventListener("click",()=>{
+      deleteAnnouncement(
+        btn.getAttribute("data-delete-announcement")
+      );
+    });
+
+  });
+}
+
+async function deleteAnnouncement(id){
+
+  if(!id) return;
+
+  if(!confirm("¿Eliminar este anuncio?")) return;
+
+  try{
+
+    await db.collection("anuncios")
+      .doc(id)
+      .delete();
+
+    await loadAnnouncements();
+    renderAnnouncements();
+
+  }catch(e){
+
+    console.error(e);
+
+    alert(
+      "No se pudo eliminar el anuncio. " +
+      "Revisá las reglas de Firestore."
+    );
+  }
+}
+
+/* =========================================================
+   ESTADO DEL SISTEMA
+   ========================================================= */
+
+function renderSystemStatus(){
+
+  const producerIds = new Set();
+  const uidRecords = new Set();
+
+  [
+    ...DATA.treatments,
+    ...DATA.readings,
+    ...DATA.parcels
+  ].forEach(d=>{
+
+    if(d.uid){
+      producerIds.add(d.uid);
+      uidRecords.add(d.id || Math.random());
+    }
+
+    /*
+      Algunas versiones pueden usar viticultorUid.
+    */
+
+    if(d.viticultorUid){
+      producerIds.add(d.viticultorUid);
+      uidRecords.add(d.id || Math.random());
+    }
+  });
+
+  document.getElementById("statUsersCloud")
+    .textContent =
+      producerIds.size;
+
+  document.getElementById("statUidRecords")
+    .textContent =
+      uidRecords.size;
+}
+
+/* =========================================================
+   ESTADO GENERAL
+   ========================================================= */
+
+function setGlobalStatus(message,error=false){
+
+  const el =
+    document.getElementById("globalStatus");
+
+  el.textContent = message;
+
+  el.className =
+    error
+    ? "status error"
+    : "status";
+}
+
+/* =========================================================
+   ATAJO DE TECLADO
+   ========================================================= */
+
+document.addEventListener("keydown",e=>{
+
+  if(
+    (e.ctrlKey || e.metaKey) &&
+    e.key.toLowerCase() === "r" &&
+    auth.currentUser
+  ){
+    e.preventDefault();
+    loadAll();
+  }
+
+});
+</script>
+</body>
+</html>
